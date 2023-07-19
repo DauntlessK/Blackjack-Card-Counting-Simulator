@@ -29,16 +29,18 @@ class Card():
         return (f'{self.get_rank()} of {self.get_suit()}')
 
 class Deck():
+    deck = []
+    discard = []
 
     def __int__(self):
-        deck = []
-        discard = []
+        self.deck = []
+        self.discard = []
         suits = ["Hearts", "Clubs", "Spades", "Diamonds"]
         rank = [2, 3, 4, 5, 6, 7, 8, 9, 10, "Jack", "Queen", "King", "Ace"]
 
         for s in suits:
             for r in rank:
-                deck.append(Card(s, r))
+                self.deck.append(Card(s, r))
 
 
     def shuffle(self):     #shuffles current deck
