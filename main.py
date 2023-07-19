@@ -11,12 +11,12 @@ class Card():
         self.suit = suit
         self.rank = rank
 
-        if isinstance(rank, int):
+        if isinstance(rank, int):    #assigns value of card (for blackjack) - if its just a number, assign #
             self.value = rank
-        elif rank == "Ace":
+        elif rank == "Ace":          #assigns values if rank is Ace
             self.value = 11
             self.altvalue = 1
-        else:
+        else:                        #assigns value if rank is not a number or ace card (i.e. face card of any kind)
             self.value = 10
 
     def get_suit(self):
