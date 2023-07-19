@@ -48,7 +48,6 @@ class Deck():
     def draw(self):
         draw = self.deck.pop()
         self.discard.append(draw)
-        self.deck.remove[0]
         print(draw)
 
 deck1 = Deck()
