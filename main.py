@@ -48,6 +48,11 @@ class Deck():
         random.shuffle(self.deck)
 
     def draw(self):
+        if self.cardsInDeck < 20:
+            print("Reshuffling deck")
+            newDeck = self.deck + self.discard
+            newDeck.shuf()
+            self.deck = newDeck
         drawnCard = self.deck.pop()
         self.discard.append(drawnCard)
         self.cardsInDeck -= 1
@@ -125,6 +130,16 @@ class Hand():
             return True
         else:
             return False
+
+def playLoop():
+    deck1 = Deck()
+    deck1.shuf()
+    myhand = Hand()
+    dealer = Hand()
+    playing = True
+
+    while playing:
+        print("PLAY")
 
 deck1 = Deck()
 deck1.shuf()
