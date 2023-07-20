@@ -64,6 +64,12 @@ class Hand():
     numOfAces = 0          #counts number of aces
     numOfAcesAs1 = 0       #counts aces that are used as a value of 1 (to prevent bust)
 
+    def __init__(self):
+        self.hand = []
+        self.total = 0
+        self.numOfAces = 0
+        self.numOfAcesAs1 = 0
+
     def __str__(self):
         toReturn = ""
         for c in range(len(self.hand)):
@@ -128,8 +134,11 @@ myhand.draw1(deck1)
 myhand.draw1(deck1)
 dealer.draw1(deck1)
 dealer.draw1(deck1)
-myhand.showHand()
 print(myhand)
-print(len(myhand.hand))
-print(len(dealer.hand))
-print(myhand < dealer)
+print(dealer)
+if myhand > dealer:
+    print("You win!")
+elif myhand == dealer:
+    print("Push!")
+else:
+    print("You lost!")
