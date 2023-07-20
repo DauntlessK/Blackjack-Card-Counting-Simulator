@@ -17,20 +17,21 @@ class Card():
         else:                        #assigns value if rank is not a number or ace card (i.e. face card of any kind)
             self.value = 10
 
+    def __str__(self):
+        return (f'{self.get_rank()} of {self.get_suit()}')
+
     def get_suit(self):
         return self.suit
 
     def get_rank(self):
         return self.rank
 
-    def __str__(self):
-        return (f'{self.get_rank()} of {self.get_suit()}')
 
 class Deck():
-    deck = []
-    discard = []
-    cardsInDeck = 0
-    cardsInDiscard = 0
+    deck = []                      #list of card objects that are to be drawn
+    discard = []                   #list of card objects that were drawn
+    cardsInDeck = 0                #count of cards still in deck- unnecessary and can use length instead
+    cardsInDiscard = 0             #count of cards in discard- same as above
 
     def __init__(self):
         self.deck = []
@@ -58,31 +59,50 @@ class Deck():
             print(c)
 
 class Hand():
-    hand = []
-    total = 0
-    numOfAces = 0
-    numOfAcesAs1 = 0
+    hand = []              #list of card objects
+    total = 0              #total value in blackjack
+    numOfAces = 0          #counts number of aces
+    numOfAcesAs1 = 0       #counts aces that are used as a value of 1 (to prevent bust)
+
+    def __str__(self):
+        toReturn = ""
+        for c in range(len(self.hand)):
+            if c != 0:
+                toReturn += ", "
+            toReturn += str(self.hand[c])
+        return toReturn
+
+    def __eq__(self, otherHand):
+        if self.total == otherHand.getTotal():
+            return True
+        else:
+            return False
+
+    def __lt__(self, otherHand):
+        if self.total < otherHand.getTotal():
+            return True
+        else:
+            return False
+
+    def __gt__(self, otherHand):
+        if self.total > otherHand.getTotal():
+            return True
+        else:
+            return False
 
     def draw1(self, Deck):
         newCard = Deck.draw()
         self.hand.append(newCard)
 
         if newCard.rank == "Ace":
-            self.numOfAces =+ 1
+            self.numOfAces += 1
 
         self.total = self.total + newCard.value
 
-        #if self.numOfAces == 1 and self.total > 21:
-        #    self.total = self.total - 10
-        #elif self.numOfAces == 2 and self.total > 21:  #technically don't need this for final
-        #    print("NEED TO FIGURE LOGIC OUT")          #but additional logic needed to change multiple aces from 11 to 1
-
         if self.numOfAcesAs1 < self.numOfAces:
-            if self.total > 21:
+            if self.isBust():
                 self.total = self.total - 10
                 self.numOfAcesAs1 += 1
-            #for x in range (self.numOfAces):
-
 
         if self.isBust():
             print("BUST!")
@@ -103,11 +123,11 @@ class Hand():
 deck1 = Deck()
 deck1.shuf()
 myhand = Hand()
+dealer = Hand()
 myhand.draw1(deck1)
 myhand.draw1(deck1)
-myhand.draw1(deck1)
-myhand.draw1(deck1)
-myhand.draw1(deck1)
-myhand.draw1(deck1)
+dealer.draw1(deck1)
+dealer.draw1(deck1)
 myhand.showHand()
-print(myhand.getTotal())
+print(myhand)
+print(myhand < dealer)
