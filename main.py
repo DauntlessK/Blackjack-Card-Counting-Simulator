@@ -49,11 +49,11 @@ class Deck():
         random.shuffle(self.deck)
 
     def draw(self):
-        draw = self.deck.pop()
-        self.discard.append(draw)
+        drawnCard = self.deck.pop()
+        self.discard.append(drawnCard)
         self.cardsInDeck -= 1
         self.cardsInDiscard += 1
-        return(draw)
+        return(drawnCard)
 
     def lookAtDiscard(self):
         for c in self.discard:
@@ -62,17 +62,41 @@ class Deck():
 class Hand():
     hand = []
     total = 0
+    numOfAces = 0
 
-    def draw1(self, deck):
-        self.hand.append(deck.draw)
+    def draw1(self, Deck):
+        newCard = Deck.draw()
+        self.hand.append(newCard)
+
+        if newCard.rank == "Ace":
+            self.numOfAces =+ 1
+
+        self.total = self.total + newCard.value
+
+        if self.numOfAces == 1 and self.total > 21:
+            self.total = self.total - 10
+        elif self.numOfAces == 2 and self.total > 21:  #technically don't need this for final
+            print("NEED TO FIGURE LOGIC OUT")          #but additional logic needed to change multiple aces from 11 to 1
+
 
     def showHand(self):
         for c in self.hand:
             print(c)
+
+    def getTotal(self):
+        return self.total
+
+    def isBust(self):
+        if self.total > 21:
+            return True
+        else:
+            return False
 
 deck1 = Deck()
 deck1.shuf()
 myhand = Hand()
 myhand.draw1(deck1)
 myhand.draw1(deck1)
+myhand.draw1(deck1)
 myhand.showHand()
+print(myhand.getTotal())
