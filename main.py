@@ -5,7 +5,6 @@ class Card():
     suit = ""      #suit
     rank = 0       #card number or face
     value = 0      #number value in blackjack
-    altvalue = 0   #alt value for ace
 
     def __init__(self, suit, rank):
         self.suit = suit
@@ -15,7 +14,6 @@ class Card():
             self.value = rank
         elif rank == "Ace":          #assigns values if rank is Ace
             self.value = 11
-            self.altvalue = 1
         else:                        #assigns value if rank is not a number or ace card (i.e. face card of any kind)
             self.value = 10
 
@@ -63,6 +61,7 @@ class Hand():
     hand = []
     total = 0
     numOfAces = 0
+    numOfAcesAs1 = 0
 
     def draw1(self, Deck):
         newCard = Deck.draw()
@@ -73,11 +72,20 @@ class Hand():
 
         self.total = self.total + newCard.value
 
-        if self.numOfAces == 1 and self.total > 21:
-            self.total = self.total - 10
-        elif self.numOfAces == 2 and self.total > 21:  #technically don't need this for final
-            print("NEED TO FIGURE LOGIC OUT")          #but additional logic needed to change multiple aces from 11 to 1
+        #if self.numOfAces == 1 and self.total > 21:
+        #    self.total = self.total - 10
+        #elif self.numOfAces == 2 and self.total > 21:  #technically don't need this for final
+        #    print("NEED TO FIGURE LOGIC OUT")          #but additional logic needed to change multiple aces from 11 to 1
 
+        if self.numOfAcesAs1 < self.numOfAces:
+            if self.total > 21:
+                self.total = self.total - 10
+                self.numOfAcesAs1 += 1
+            #for x in range (self.numOfAces):
+
+
+        if self.isBust():
+            print("BUST!")
 
     def showHand(self):
         for c in self.hand:
@@ -95,6 +103,9 @@ class Hand():
 deck1 = Deck()
 deck1.shuf()
 myhand = Hand()
+myhand.draw1(deck1)
+myhand.draw1(deck1)
+myhand.draw1(deck1)
 myhand.draw1(deck1)
 myhand.draw1(deck1)
 myhand.draw1(deck1)
