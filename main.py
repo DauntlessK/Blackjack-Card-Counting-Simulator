@@ -31,8 +31,10 @@ class Card():
 class Deck():
     deck = []
     discard = []
+    cardsInDeck = 0
+    cardsInDiscard = 0
 
-    def __int__(self):
+    def __init__(self):
         self.deck = []
         self.discard = []
         suits = ["Hearts", "Clubs", "Spades", "Diamonds"]
@@ -41,17 +43,36 @@ class Deck():
         for s in suits:
             for r in rank:
                 self.deck.append(Card(s, r))
+                self.cardsInDeck += 1
 
-
-    def shuffle(self):     #shuffles current deck
+    def shuf(self):     #shuffles current deck
         random.shuffle(self.deck)
-        print(self.deck[0])
 
     def draw(self):
         draw = self.deck.pop()
         self.discard.append(draw)
-        print(draw)
+        self.cardsInDeck -= 1
+        self.cardsInDiscard += 1
+        return(draw)
+
+    def lookAtDiscard(self):
+        for c in self.discard:
+            print(c)
+
+class Hand():
+    hand = []
+    total = 0
+
+    def draw1(self, deck):
+        self.hand.append(deck.draw)
+
+    def showHand(self):
+        for c in self.hand:
+            print(c)
 
 deck1 = Deck()
-deck1.shuffle()
-#deck1.draw()
+deck1.shuf()
+myhand = Hand()
+myhand.draw1(deck1)
+myhand.draw1(deck1)
+myhand.showHand()
