@@ -47,13 +47,15 @@ class Deck():
             for r in rank:
                 self.deck.append(Card(s, r))
 
+        self.reshuf()
+
     def shuf(self):
         """shuffles current deck"""
         random.shuffle(self.deck)
 
     def reshuf(self):
         """Reshuffles the deck by first combining the discard back into the deck, shuffling deck, then clearing discard list"""
-        print("---Reshuffling deck---")
+        #print("---Reshuffling deck---")
         newDeck = self.deck + self.discard
         random.shuffle(newDeck)
         self.deck = newDeck
@@ -163,6 +165,29 @@ class Hand():
         self.numOfAces = 0
         self.numOfAcesAs1 = 0
 
+def getRandomDeck(deckList):
+    """Randomly picks and returns a single deck from list of decks
+    as long as it is not an empty deck."""
+    while True:
+        randomDeck = random.choice(deckList)
+        if len(randomDeck.deck) == 0:
+            continue
+        else:
+            return randomDeck
+
+
+def checkAllDecksNeedReshuf(deckList, reShuf):
+    """Checks each deck's need shuffling boolean and if all are true, reshuffles
+    all decks."""
+    numOfDecksThatNeedShuffling = 0
+    for d in range (len(deckList)):                     #count how many decks need reshuffling
+        if deckList[d].needsReshuf:
+            numOfDecksThatNeedShuffling += 1
+    if numOfDecksThatNeedShuffling == len(deckList):    #if all decks need reshuffling
+        print("---Reshuffling deck(s)---")
+        for d in range(len(deckList)):
+            deckList[d].reshuf()
+
 def printTable(my, dealer):
     """Prints dealer's card(s), then player's cards"""
     print("DEALER SHOWING: ", end="")
@@ -174,10 +199,12 @@ def printRecord(w, l, t):
     """Prints win, loss and tie values that are passed."""
     print("Your record: ", w, "W/", l, "L/", t, "T")
 
-def playBlackJackLoop():
+def playBlackJackLoop(numDecks, reshuf):
     """Loop that gets user input to continually play blackjack. Keeps track of wins, losses and ties for the session."""
-    deck1 = Deck(20)
-    deck1.shuf()
+    #reshuffle point should not be lower than 10
+    decks = []
+    for d in range (numDecks):
+       decks.append(Deck(reshuf))
     myHand = Hand()
     dealer = Hand()
     playing = True
@@ -186,7 +213,7 @@ def playBlackJackLoop():
     ties = 0
 
     while playing:
-        playOrNot = input("Would you like to play?")
+        playOrNot = input("****** Would you like to play?")
 
         match playOrNot:
             case "no" | "n" | "No" | "quit" | "q" | "Q" | "N":
@@ -197,8 +224,8 @@ def playBlackJackLoop():
 
         myHand.discardHand()       #ensures hand values are empty / reset
         dealer.discardHand()       #ensures dealer hand values are empty / reset
-        myHand.newHand(deck1, 2)
-        dealer.newHand(deck1, 1)
+        myHand.newHand(getRandomDeck(decks), 2)
+        dealer.newHand(getRandomDeck(decks), 1)
         printTable(myHand, dealer)
 
         while (myHand.isBust() == False) and (myHand.isBJ() == False):
@@ -207,7 +234,7 @@ def playBlackJackLoop():
 
             match hitOrStay:
                 case "hit" | "h" | "Hit" | "H":
-                    myHand.draw1(deck1)
+                    myHand.draw1(getRandomDeck(decks))
                 case _:
                     break
             printTable(myHand, dealer)
@@ -220,9 +247,9 @@ def playBlackJackLoop():
             print("Blackjack! You win!")
             wins += 1
         else:
-            dealer.draw1(deck1)
+            dealer.draw1(getRandomDeck(decks))
             while dealer.getTotal() <= 16:
-                dealer.draw1(deck1)
+                dealer.draw1(getRandomDeck(decks))
             printTable(myHand, dealer)
             if dealer.isBust():
                 print("Dealer is bust! You win!")
@@ -237,8 +264,73 @@ def playBlackJackLoop():
                 print("You lose!")
                 losses += 1
         printRecord(wins, losses, ties)
-        if deck1.needsReshuf == True:           #checks if deck needs to be reshuffled
-            deck1.reshuf()
+        checkAllDecksNeedReshuf(decks, reshuf)           #checks if deck needs to be reshuffled
+
+#def simulateGame(myHand, dealer, deck):
+#    print("TODO: Simulate game (first simulate dealer")
+def printResults(winList,lossList,tieList):
+    print("Wins: ", winList)
+    print("Losses: ", lossList)
+    print("Ties: ", tieList)
+
+def simulation(times, numDecks, reshuf):
+    """Simulate x number of games with y number of decks
+    counts # of wins if 'player' stays at 2 cards, or hits once"""
+
+    winValues = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    lossValues = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    tieValues = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    myHand = Hand()
+    dealer = Hand()
+    decks = []
+    for d in range(numDecks):
+        decks.append(Deck(reshuf))
+
+    loops = 1
+    while loops < times:
+        myHand.discardHand()      # ensures hand values are empty / reset
+        dealer.discardHand()      # ensures dealer hand values are empty / reset
+
+        myHand.newHand(getRandomDeck(decks), 2)
+        dealer.newHand(getRandomDeck(decks), 2)
+        handStartingValue = myHand.getTotal()
+
+        while dealer.getTotal() <= 16:
+            dealer.draw1(getRandomDeck(decks))
+
+        #check if player won/lost/tied with 2 cards
+        if (dealer.isBust()) or (myHand.getTotal() > dealer.getTotal()):
+            winValues[handStartingValue] += 1
+        #check if push
+        elif myHand.getTotal() == dealer.getTotal():
+            tieValues[handStartingValue] += 1
+        elif myHand.getTotal() < dealer.getTotal():
+            lossValues[handStartingValue] += 1
+        else:
+            print("Error")
+
+        myHand.draw1(getRandomDeck(decks))
+        # check if player won/lost/tied with 3 cards
+        if (myHand.isBust()):            #no matter what if player busts, it is a loss
+            lossValues[handStartingValue] += 1
+        elif myHand.getTotal() > dealer.getTotal():
+            winValues[handStartingValue] += 1
+        # check if push
+        elif myHand.getTotal() == dealer.getTotal():
+            tieValues[handStartingValue] += 1
+        elif myHand.getTotal() < dealer.getTotal():
+            lossValues[handStartingValue] += 1
+        else:
+             print("Error")
 
 
-playBlackJackLoop()
+        #simulateGame(myHand, dealer, deck)
+        loops += 1
+
+    printResults(winValues,lossValues,tieValues)
+
+
+#playBlackJackLoop(2,20)
+simulation(10,2,20)
+
+#startingValues = [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]
