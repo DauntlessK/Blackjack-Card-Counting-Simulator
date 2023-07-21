@@ -176,16 +176,14 @@ def playLoop():
         myHand.newHand(deck1)
         dealer.draw1(deck1)
         printTable(myHand, dealer)
-        stay = False
 
-        while (stay == False) and (myHand.isBust() == False) and (myHand.isBJ() == False):
+        while (myHand.isBust() == False) and (myHand.isBJ() == False):
             hitOrStay = input("Hit or Stay?")
 
             match hitOrStay:
                 case "hit" | "h" | "Hit" | "H":
                     myHand.draw1(deck1)
                 case _:
-                    stay = False
                     break
             printTable(myHand, dealer)
         if myHand.isBust():
