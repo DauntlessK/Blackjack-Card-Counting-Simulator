@@ -30,8 +30,6 @@ class Card():
 class Deck():
     deck = []                      #list of card objects that are to be drawn
     discard = []                   #list of card objects that were drawn
-    cardsInDeck = 0                #count of cards still in deck- unnecessary and can use length instead
-    cardsInDiscard = 0             #count of cards in discard- same as above
 
     def __init__(self):
         self.deck = []
@@ -42,21 +40,19 @@ class Deck():
         for s in suits:
             for r in rank:
                 self.deck.append(Card(s, r))
-                self.cardsInDeck += 1
 
     def shuf(self):     #shuffles current deck
         random.shuffle(self.deck)
 
     def draw(self):
-        if self.cardsInDeck < 20:
-            print("Reshuffling deck")
+        if len(self.deck) < 20:              #reshuffles deck when below 20 cards
+            print("---Reshuffling deck---")
             newDeck = self.deck + self.discard
-            newDeck.shuf()
+            random.shuffle(newDeck)
             self.deck = newDeck
+            self.discard.clear()
         drawnCard = self.deck.pop()
         self.discard.append(drawnCard)
-        self.cardsInDeck -= 1
-        self.cardsInDiscard += 1
         return(drawnCard)
 
     def lookAtDiscard(self):
@@ -115,8 +111,6 @@ class Hand():
                 self.total = self.total - 10
                 self.numOfAcesAs1 += 1
 
-        if self.isBust():
-            print("BUST!")
 
     def showHand(self):
         for c in self.hand:
@@ -131,29 +125,93 @@ class Hand():
         else:
             return False
 
+    def isBJ(self):
+        if self.total == 21 and len(self.hand) == 2:
+            return True
+        else:
+            return False
+
+    def newHand(self, Deck):
+        self.draw1(Deck)
+        self.draw1(Deck)
+
+    def discardHand(self):
+        self.total = 0
+        self.hand = []
+        self.numOfAces = 0
+        self.numOfAcesAs1 = 0
+
+def printTable(my, dealer):     #prints dealers card(s), then players cards
+    print("DEALER SHOWING: ", end="")
+    print(dealer)
+    print("Hand: ", end = "")
+    print(my)      #does not provide values / totals. can add
+
+def printRecord(w, l, t):
+    print("Your record: ", w, "W/", l, "L/", t, "T")
+
+#def checkWhoWon()
 def playLoop():
     deck1 = Deck()
     deck1.shuf()
-    myhand = Hand()
+    myHand = Hand()
     dealer = Hand()
     playing = True
+    wins = 0
+    losses = 0
+    ties = 0
 
     while playing:
-        print("PLAY")
+        playOrNot = input("Would you like to play?")
 
-deck1 = Deck()
-deck1.shuf()
-myhand = Hand()
-dealer = Hand()
-myhand.draw1(deck1)
-myhand.draw1(deck1)
-dealer.draw1(deck1)
-dealer.draw1(deck1)
-print(myhand)
-print(dealer)
-if myhand > dealer:
-    print("You win!")
-elif myhand == dealer:
-    print("Push!")
-else:
-    print("You lost!")
+        match playOrNot:
+            case "no" | "n" | "No" | "quit" | "q" | "Q" | "N":
+                playing = False
+                print("Thank you for playing.")
+                printRecord(wins, losses, ties)
+                break
+
+        myHand.discardHand()       #ensures hand values are empty / reset
+        dealer.discardHand()       #ensures dealer hand values are empty / reset
+        myHand.newHand(deck1)
+        dealer.draw1(deck1)
+        printTable(myHand, dealer)
+        stay = False
+
+        while (stay == False) and (myHand.isBust() == False) and (myHand.isBJ() == False):
+            hitOrStay = input("Hit or Stay?")
+
+            match hitOrStay:
+                case "hit" | "h" | "Hit" | "H":
+                    myHand.draw1(deck1)
+                case _:
+                    stay = False
+                    break
+            printTable(myHand, dealer)
+        if myHand.isBust():
+            print("Bust! You lost!")
+            losses += 1
+        elif myHand.isBJ():
+            print("Blackjack! You win!")
+            wins += 1
+        else:
+            dealer.draw1(deck1)
+            while dealer.getTotal() <= 16:
+                dealer.draw1(deck1)
+            printTable(myHand, dealer)
+            if dealer.isBust():
+                print("Dealer is bust! You win!")
+                wins += 1
+            elif myHand > dealer:
+                print("You win!")
+                wins += 1
+            elif myHand == dealer:
+                print("Push!")
+                ties += 1
+            else:
+                print("You lose!")
+                losses += 1
+        printRecord(wins, losses, ties)
+
+
+playLoop()
