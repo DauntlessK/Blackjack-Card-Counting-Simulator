@@ -253,18 +253,18 @@ def simulation(times, numDecks, reshuf):
     """Simulate x number of games with y number of decks
     counts # of wins if 'player' stays at 2 cards, or hits once"""
 
-    head_row = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, "TOTAL"]
-    twocard_winValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    head_row = ["", 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, "TOTAL"]
+    twocard_winValues = ["Two Card Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     twocard_wins = 0
-    twocard_lossValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    twocard_lossValues = ["Two Card Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     twocard_losses = 0
-    twocard_tieValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    twocard_tieValues = ["Two Card Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     twocard_ties = 0
-    threecard_winValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    threecard_winValues = ["Three Card Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     threecard_wins = 0
-    threecard_lossValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    threecard_lossValues = ["Three Card Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     threecard_losses = 0
-    threecard_tieValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    threecard_tieValues = ["Three Card Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     threecard_ties = 0
     myHand = Hand()
     dealer = Hand()
@@ -319,12 +319,12 @@ def simulation(times, numDecks, reshuf):
         loops += 1
 
     #remove all 0-3 results from the lists
-    del twocard_winValues[0:4]
-    del twocard_lossValues[0:4]
-    del twocard_tieValues[0:4]
-    del threecard_winValues[0:4]
-    del threecard_lossValues[0:4]
-    del threecard_tieValues[0:4]
+    del twocard_winValues[1:5]
+    del twocard_lossValues[1:5]
+    del twocard_tieValues[1:5]
+    del threecard_winValues[1:5]
+    del threecard_lossValues[1:5]
+    del threecard_tieValues[1:5]
 
     #add the total for each list to the final cell
     twocard_winValues.append(twocard_wins)
