@@ -1,5 +1,6 @@
 # Kyle Breen-Bondie - Final Project Blackjack Simulator
 import random
+import csv
 
 class Card():
     """Single card object that holds a suit, a rank (card # or face), and a blackjack number value"""
@@ -36,26 +37,27 @@ class Deck():
     reshufNum = 20                 #number of cards left in deck at which the discard is reshuffled into deck
     needsReshuf = False            #boolean that is enabled to reshuffle cards so it can be triggered after game is complete (not mid hand)
 
-    def __init__(self, reshufNum):
+    def __init__(self, numOfDecks, reshufNum):
         self.deck = []
         self.discard = []
         self.reshufNum = reshufNum
         suits = ["Hearts", "Clubs", "Spades", "Diamonds"]
         rank = [2, 3, 4, 5, 6, 7, 8, 9, 10, "Jack", "Queen", "King", "Ace"]
 
-        for s in suits:
-            for r in rank:
-                self.deck.append(Card(s, r))
+        for d in range(numOfDecks):
+            for s in suits:
+                for r in rank:
+                    self.deck.append(Card(s, r))
 
         self.reshuf()
 
     def shuf(self):
-        """shuffles current deck"""
+        """shuffles deck list"""
         random.shuffle(self.deck)
 
     def reshuf(self):
         """Reshuffles the deck by first combining the discard back into the deck, shuffling deck, then clearing discard list"""
-        #print("---Reshuffling deck---")
+        print("---Reshuffling deck---")
         newDeck = self.deck + self.discard
         random.shuffle(newDeck)
         self.deck = newDeck
@@ -69,11 +71,6 @@ class Deck():
         drawnCard = self.deck.pop()
         self.discard.append(drawnCard)
         return(drawnCard)
-
-    def lookAtDiscard(self):
-        """Prints cards in discard list"""
-        for c in self.discard:
-            print(c)
 
 class Hand():
     """A collection of cards like a deck. Has a list of card objects, a total (for blackjack) and
@@ -165,29 +162,6 @@ class Hand():
         self.numOfAces = 0
         self.numOfAcesAs1 = 0
 
-def getRandomDeck(deckList):
-    """Randomly picks and returns a single deck from list of decks
-    as long as it is not an empty deck."""
-    while True:
-        randomDeck = random.choice(deckList)
-        if len(randomDeck.deck) == 0:
-            continue
-        else:
-            return randomDeck
-
-
-def checkAllDecksNeedReshuf(deckList, reShuf):
-    """Checks each deck's need shuffling boolean and if all are true, reshuffles
-    all decks."""
-    numOfDecksThatNeedShuffling = 0
-    for d in range (len(deckList)):                     #count how many decks need reshuffling
-        if deckList[d].needsReshuf:
-            numOfDecksThatNeedShuffling += 1
-    if numOfDecksThatNeedShuffling == len(deckList):    #if all decks need reshuffling
-        print("---Reshuffling deck(s)---")
-        for d in range(len(deckList)):
-            deckList[d].reshuf()
-
 def printTable(my, dealer):
     """Prints dealer's card(s), then player's cards"""
     print("DEALER SHOWING: ", end="")
@@ -202,9 +176,7 @@ def printRecord(w, l, t):
 def playBlackJackLoop(numDecks, reshuf):
     """Loop that gets user input to continually play blackjack. Keeps track of wins, losses and ties for the session."""
     #reshuffle point should not be lower than 10
-    decks = []
-    for d in range (numDecks):
-       decks.append(Deck(reshuf))
+    deck = Deck(2, 20)
     myHand = Hand()
     dealer = Hand()
     playing = True
@@ -224,8 +196,8 @@ def playBlackJackLoop(numDecks, reshuf):
 
         myHand.discardHand()       #ensures hand values are empty / reset
         dealer.discardHand()       #ensures dealer hand values are empty / reset
-        myHand.newHand(getRandomDeck(decks), 2)
-        dealer.newHand(getRandomDeck(decks), 1)
+        myHand.newHand(deck, 2)
+        dealer.newHand(deck, 1)
         printTable(myHand, dealer)
 
         while (myHand.isBust() == False) and (myHand.isBJ() == False):
@@ -234,7 +206,7 @@ def playBlackJackLoop(numDecks, reshuf):
 
             match hitOrStay:
                 case "hit" | "h" | "Hit" | "H":
-                    myHand.draw1(getRandomDeck(decks))
+                    myHand.draw1(deck)
                 case _:
                     break
             printTable(myHand, dealer)
@@ -247,9 +219,9 @@ def playBlackJackLoop(numDecks, reshuf):
             print("Blackjack! You win!")
             wins += 1
         else:
-            dealer.draw1(getRandomDeck(decks))
+            dealer.draw1(deck)
             while dealer.getTotal() <= 16:
-                dealer.draw1(getRandomDeck(decks))
+                dealer.draw1(deck)
             printTable(myHand, dealer)
             if dealer.isBust():
                 print("Dealer is bust! You win!")
@@ -264,73 +236,88 @@ def playBlackJackLoop(numDecks, reshuf):
                 print("You lose!")
                 losses += 1
         printRecord(wins, losses, ties)
-        checkAllDecksNeedReshuf(decks, reshuf)           #checks if deck needs to be reshuffled
+        if deck.needsReshuf:
+            deck.reshuf()
 
 #def simulateGame(myHand, dealer, deck):
 #    print("TODO: Simulate game (first simulate dealer")
-def printResults(winList,lossList,tieList):
-    print("Wins: ", winList)
-    print("Losses: ", lossList)
-    print("Ties: ", tieList)
+def printResults(times,w,l,t,winList,lossList,tieList):
+    print("Simulated ", times, "games. Record: ", w, "/", l, "/", t)
+    print("Starting:  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 BJ")
+    print("Wins:    ", winList)
+    print("Losses:  ", lossList)
+    print("Ties:    ", tieList)
+    with open("results.csv", "w", newline="") as file:
+        writer = csv.writer(file)
+
+        writer.writerow
 
 def simulation(times, numDecks, reshuf):
     """Simulate x number of games with y number of decks
     counts # of wins if 'player' stays at 2 cards, or hits once"""
 
     winValues = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    wins = 0
     lossValues = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    losses = 0
     tieValues = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ties = 0
     myHand = Hand()
     dealer = Hand()
-    decks = []
-    for d in range(numDecks):
-        decks.append(Deck(reshuf))
+    decks = Deck(numDecks, reshuf)
 
-    loops = 1
+    loops = 0
     while loops < times:
         myHand.discardHand()      # ensures hand values are empty / reset
         dealer.discardHand()      # ensures dealer hand values are empty / reset
 
-        myHand.newHand(getRandomDeck(decks), 2)
-        dealer.newHand(getRandomDeck(decks), 2)
+        myHand.newHand(deck, 2)
+        dealer.newHand(deck, 2)
         handStartingValue = myHand.getTotal()
 
         while dealer.getTotal() <= 16:
-            dealer.draw1(getRandomDeck(decks))
+            dealer.draw1(deck)
 
         #check if player won/lost/tied with 2 cards
         if (dealer.isBust()) or (myHand.getTotal() > dealer.getTotal()):
             winValues[handStartingValue] += 1
+            wins += 1
         #check if push
         elif myHand.getTotal() == dealer.getTotal():
             tieValues[handStartingValue] += 1
+            ties += 1
         elif myHand.getTotal() < dealer.getTotal():
             lossValues[handStartingValue] += 1
+            losses += 1
         else:
             print("Error")
 
-        myHand.draw1(getRandomDeck(decks))
+        myHand.draw1(deck)
         # check if player won/lost/tied with 3 cards
         if (myHand.isBust()):            #no matter what if player busts, it is a loss
             lossValues[handStartingValue] += 1
+            losses += 1
         elif myHand.getTotal() > dealer.getTotal():
             winValues[handStartingValue] += 1
+            wins += 1
         # check if push
         elif myHand.getTotal() == dealer.getTotal():
             tieValues[handStartingValue] += 1
+            ties += 1
         elif myHand.getTotal() < dealer.getTotal():
             lossValues[handStartingValue] += 1
+            losses += 1
         else:
              print("Error")
 
-
-        #simulateGame(myHand, dealer, deck)
         loops += 1
+    del winValues[0:4]
+    del lossValues[0:4]
+    del tieValues[0:4]
+    printResults(times,wins,losses,ties,winValues,lossValues,tieValues)
 
-    printResults(winValues,lossValues,tieValues)
 
-
-#playBlackJackLoop(2,20)
-simulation(10,2,20)
+playBlackJackLoop(2,20)
+#simulation(20,3,20)
 
 #startingValues = [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]
