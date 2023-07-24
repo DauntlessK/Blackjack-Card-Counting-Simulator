@@ -247,24 +247,28 @@ def printResults(times,w,l,t,winList,lossList,tieList):
     print("Wins:    ", winList)
     print("Losses:  ", lossList)
     print("Ties:    ", tieList)
-    with open("results.csv", "w", newline="") as file:
-        writer = csv.writer(file)
 
-        writer.writerow
 
 def simulation(times, numDecks, reshuf):
     """Simulate x number of games with y number of decks
     counts # of wins if 'player' stays at 2 cards, or hits once"""
 
-    winValues = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    wins = 0
-    lossValues = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    losses = 0
-    tieValues = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    ties = 0
+    head_row = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, "TOTAL"]
+    twocard_winValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    twocard_wins = 0
+    twocard_lossValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    twocard_losses = 0
+    twocard_tieValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    twocard_ties = 0
+    threecard_winValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    threecard_wins = 0
+    threecard_lossValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    threecard_losses = 0
+    threecard_tieValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    threecard_ties = 0
     myHand = Hand()
     dealer = Hand()
-    decks = Deck(numDecks, reshuf)
+    deck = Deck(numDecks, reshuf)
 
     loops = 0
     while loops < times:
@@ -280,44 +284,69 @@ def simulation(times, numDecks, reshuf):
 
         #check if player won/lost/tied with 2 cards
         if (dealer.isBust()) or (myHand.getTotal() > dealer.getTotal()):
-            winValues[handStartingValue] += 1
-            wins += 1
+            twocard_winValues[handStartingValue] += 1
+            twocard_wins += 1
         #check if push
         elif myHand.getTotal() == dealer.getTotal():
-            tieValues[handStartingValue] += 1
-            ties += 1
+            twocard_tieValues[handStartingValue] += 1
+            twocard_ties += 1
         elif myHand.getTotal() < dealer.getTotal():
-            lossValues[handStartingValue] += 1
-            losses += 1
+            twocard_lossValues[handStartingValue] += 1
+            twocard_losses += 1
         else:
             print("Error")
 
         myHand.draw1(deck)
         # check if player won/lost/tied with 3 cards
         if (myHand.isBust()):            #no matter what if player busts, it is a loss
-            lossValues[handStartingValue] += 1
-            losses += 1
+            threecard_lossValues[handStartingValue] += 1
+            threecard_losses += 1
         elif myHand.getTotal() > dealer.getTotal():
-            winValues[handStartingValue] += 1
-            wins += 1
+            threecard_winValues[handStartingValue] += 1
+            threecard_wins += 1
         # check if push
         elif myHand.getTotal() == dealer.getTotal():
-            tieValues[handStartingValue] += 1
-            ties += 1
+            threecard_tieValues[handStartingValue] += 1
+            threecard_ties += 1
         elif myHand.getTotal() < dealer.getTotal():
-            lossValues[handStartingValue] += 1
-            losses += 1
+            threecard_lossValues[handStartingValue] += 1
+            threecard_losses += 1
         else:
              print("Error")
 
+        if deck.needsReshuf:
+            deck.reshuf()
         loops += 1
-    del winValues[0:4]
-    del lossValues[0:4]
-    del tieValues[0:4]
-    printResults(times,wins,losses,ties,winValues,lossValues,tieValues)
+
+    #remove all 0-3 results from the lists
+    del twocard_winValues[0:4]
+    del twocard_lossValues[0:4]
+    del twocard_tieValues[0:4]
+    del threecard_winValues[0:4]
+    del threecard_lossValues[0:4]
+    del threecard_tieValues[0:4]
+
+    #add the total for each list to the final cell
+    twocard_winValues.append(twocard_wins)
+    twocard_lossValues.append(twocard_losses)
+    twocard_tieValues.append(twocard_ties)
+    threecard_winValues.append(threecard_wins)
+    threecard_lossValues.append(threecard_losses)
+    threecard_tieValues.append(threecard_ties)
+
+    with open("results.csv", "w", newline="") as file:
+        writer = csv.writer(file)
+
+        writer.writerows([head_row])
+        writer.writerows([twocard_winValues])
+        writer.writerows([twocard_lossValues])
+        writer.writerows([twocard_tieValues])
+        writer.writerows([threecard_winValues])
+        writer.writerows([threecard_lossValues])
+        writer.writerows([threecard_tieValues])
 
 
-playBlackJackLoop(2,20)
-#simulation(20,3,20)
+#playBlackJackLoop(2,20)
+simulation(100,3,20)
 
 #startingValues = [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]
