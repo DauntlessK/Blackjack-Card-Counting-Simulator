@@ -36,6 +36,7 @@ class Deck():
     discard = []                   #list of card objects that were drawn
     reshufNum = 20                 #number of cards left in deck at which the discard is reshuffled into deck
     needsReshuf = False            #boolean that is enabled to reshuffle cards so it can be triggered after game is complete (not mid hand)
+    cardCountOffset = 0            #counts 2-6 as +1, 7-9 as 0, and 10/ace as -1
 
     def __init__(self, numOfDecks, reshufNum):
         self.deck = []
@@ -69,6 +70,11 @@ class Deck():
         if len(self.deck) < self.reshufNum:
             self.needsReshuf = True
         drawnCard = self.deck.pop()
+        #adjusts offset
+        if drawnCard.value <= 6:
+            self.cardCountOffset += 1
+        elif drawnCard.value >= 10:
+            self.cardCountOffset -= 1
         self.discard.append(drawnCard)
         return(drawnCard)
 
@@ -79,12 +85,14 @@ class Hand():
     total = 0              #total value in blackjack
     numOfAces = 0          #counts number of aces
     numOfAcesAs1 = 0       #counts aces that are used as a value of 1 (to prevent bust)
+    betAmount = 0
 
-    def __init__(self):
+    def __init__(self, betAmount):
         self.hand = []
         self.total = 0
         self.numOfAces = 0
         self.numOfAcesAs1 = 0
+        self.betAmount = betAmount
 
     def __str__(self):
         toReturn = ""
@@ -173,12 +181,27 @@ def printRecord(w, l, t):
     """Prints win, loss and tie values that are passed."""
     print("Your record: ", w, "W/", l, "L/", t, "T")
 
+def getBetAmount(deck):
+    """Controls the bet amount, what the bet threshold is, and the min and max bets.
+    Returns the bet."""
+    offSetThreshold = -10     #point at which the player feels it is in his favor
+    minAmount = 5            #minimum table bet
+    bigBetAmount = 50        #big bet amount when advantageous
+    if deck.cardCountOffset <= offSetThreshold:
+        return bigBetAmount
+    else:
+        return minAmount
+
+def getBlackJackAmount(initialBet):
+    """Determines how much a blackjack pays."""
+    return initialBet * 1.5    #set at 3 to 2
+
 def playBlackJackLoop(numDecks, reshuf):
     """Loop that gets user input to continually play blackjack. Keeps track of wins, losses and ties for the session."""
     #reshuffle point should not be lower than 10
     deck = Deck(2, 20)
-    myHand = Hand()
-    dealer = Hand()
+    myHand = Hand(0)
+    dealer = Hand(0)
     playing = True
     wins = 0
     losses = 0
@@ -239,21 +262,11 @@ def playBlackJackLoop(numDecks, reshuf):
         if deck.needsReshuf:
             deck.reshuf()
 
-#def simulateGame(myHand, dealer, deck):
-#    print("TODO: Simulate game (first simulate dealer")
-def printResults(times,w,l,t,winList,lossList,tieList):
-    print("Simulated ", times, "games. Record: ", w, "/", l, "/", t)
-    print("Starting:  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 BJ")
-    print("Wins:    ", winList)
-    print("Losses:  ", lossList)
-    print("Ties:    ", tieList)
-
-
-def simulation(times, numDecks, reshuf):
+def simulation(gamesToSim, numDecks, reshuf):
     """Simulate x number of games with y number of decks
     counts # of wins if 'player' stays at 2 cards, or hits once"""
 
-    head_row = ["", 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, "TOTAL"]
+    head_row = ["Hand Starting Value", 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, "TOTAL"]
     twocard_winValues = ["Two Card Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     twocard_wins = 0
     twocard_lossValues = ["Two Card Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -266,12 +279,14 @@ def simulation(times, numDecks, reshuf):
     threecard_losses = 0
     threecard_tieValues = ["Three Card Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     threecard_ties = 0
-    myHand = Hand()
-    dealer = Hand()
     deck = Deck(numDecks, reshuf)
+    money = 0     #starting money
+
 
     loops = 0
-    while loops < times:
+    while loops < gamesToSim:
+        myHand = Hand(getBetAmount(deck))
+        dealer = Hand(getBetAmount(deck))
         myHand.discardHand()      # ensures hand values are empty / reset
         dealer.discardHand()      # ensures dealer hand values are empty / reset
 
@@ -283,16 +298,21 @@ def simulation(times, numDecks, reshuf):
             dealer.draw1(deck)
 
         #check if player won/lost/tied with 2 cards
-        if (dealer.isBust()) or (myHand.getTotal() > dealer.getTotal()):
+        if (myHand.isBJ()):
             twocard_winValues[handStartingValue] += 1
             twocard_wins += 1
-        #check if push
+            money = money + getBlackJackAmount(myHand.betAmount)
+        elif (dealer.isBust()) or (myHand.getTotal() > dealer.getTotal()):
+            twocard_winValues[handStartingValue] += 1
+            twocard_wins += 1
+            money = money + myHand.betAmount
         elif myHand.getTotal() == dealer.getTotal():
             twocard_tieValues[handStartingValue] += 1
             twocard_ties += 1
         elif myHand.getTotal() < dealer.getTotal():
             twocard_lossValues[handStartingValue] += 1
             twocard_losses += 1
+            money = money - myHand.betAmount
         else:
             print("Error")
 
@@ -304,7 +324,6 @@ def simulation(times, numDecks, reshuf):
         elif myHand.getTotal() > dealer.getTotal():
             threecard_winValues[handStartingValue] += 1
             threecard_wins += 1
-        # check if push
         elif myHand.getTotal() == dealer.getTotal():
             threecard_tieValues[handStartingValue] += 1
             threecard_ties += 1
@@ -333,7 +352,10 @@ def simulation(times, numDecks, reshuf):
     threecard_winValues.append(threecard_wins)
     threecard_lossValues.append(threecard_losses)
     threecard_tieValues.append(threecard_ties)
-    
+
+    #create betting info row
+    betRow = ["Final $", money]
+
     with open("results.csv", "w", newline="") as file:
         writer = csv.writer(file)
 
@@ -344,9 +366,10 @@ def simulation(times, numDecks, reshuf):
         writer.writerows([threecard_winValues])
         writer.writerows([threecard_lossValues])
         writer.writerows([threecard_tieValues])
+        writer.writerows([betRow])
 
 
 #playBlackJackLoop(2,20)
-simulation(100,3,20)
+simulation(1000,5,208)
 
 #startingValues = [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]
