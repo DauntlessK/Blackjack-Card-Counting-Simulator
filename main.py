@@ -333,7 +333,7 @@ def simulation(times, numDecks, reshuf):
     threecard_winValues.append(threecard_wins)
     threecard_lossValues.append(threecard_losses)
     threecard_tieValues.append(threecard_ties)
-
+    
     with open("results.csv", "w", newline="") as file:
         writer = csv.writer(file)
 
