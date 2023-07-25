@@ -196,6 +196,40 @@ def getBlackJackAmount(initialBet):
     """Determines how much a blackjack pays."""
     return initialBet * 1.5    #set at 3 to 2
 
+def getHitorStand(myHand, Dealer):
+    """Determines, based on a table of what the dealer shows and the player has, whether to hit or stand
+    Returns hit or stand string
+    Table has 1 for hit and 0 for stand, dealer showing at top row, our total on side"""
+
+    #dealer:  2  3  4  5  6  7  8  9 10 11
+    table = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #0   notused
+             [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  #1   notused
+             [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  #2   notused
+             [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  #3   notused
+             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #4
+             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #5
+             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #6
+             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #7
+             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #8
+             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #9
+             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #10
+             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #11
+             [1, 1, 0, 0, 0, 1, 1, 1, 1, 1],  #12
+             [0, 0, 0, 0, 0, 0, 1, 1, 1, 1],  #13
+             [0, 0, 0, 0, 0, 0, 1, 1, 1, 1],  #14
+             [0, 0, 0, 0, 0, 0, 1, 1, 1, 1],  #15
+             [0, 0, 0, 0, 0, 0, 1, 1, 1, 1],  #16
+             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  #17
+             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  #18
+             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  #19
+             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  #20
+             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]  #21
+
+    col4 = table[4]
+    col5 = table[5]
+    col16 = table[16]
+    print(col16[8])
+
 def playBlackJackLoop(numDecks, reshuf):
     """Loop that gets user input to continually play blackjack. Keeps track of wins, losses and ties for the session."""
     #reshuffle point should not be lower than 10
@@ -370,6 +404,5 @@ def simulation(gamesToSim, numDecks, reshuf):
 
 
 #playBlackJackLoop(2,20)
-simulation(1000,5,208)
-
-#startingValues = [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]
+#simulation(1000,5,208)
+getHitorStand()
