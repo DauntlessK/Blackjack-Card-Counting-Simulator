@@ -194,9 +194,10 @@ def getBetAmount(deck):
 
 def getBlackJackAmount(initialBet):
     """Determines how much a blackjack pays."""
+    print("Blackjack!")
     return initialBet * 1.5    #set at 3 to 2
 
-def getHitorStand(myHand, Dealer):
+def getHitorStand(myHand, dealer):
     """Determines, based on a table of what the dealer shows and the player has, whether to hit or stand
     Returns hit or stand string
     Table has 1 for hit and 0 for stand, dealer showing at top row, our total on side"""
@@ -231,6 +232,8 @@ def getHitorStand(myHand, Dealer):
     for x in range(22):
         col.append(table[x])
     #print(col[17][0])
+    if myHand.total < 21:
+        return "Stand"
     val = col[myHand.total][dealerAdjustedValue]
     if val == 0:
         return "Stand"
@@ -334,38 +337,43 @@ def simulation(gamesToSim, numDecks, reshuf):
 
     loops = 0
     while loops < gamesToSim:
-        myHand = Hand(getBetAmount(deck))
-        dealer = Hand(getBetAmount(deck))
+        betAmount = getBetAmount(deck)
+        myHand = Hand(betAmount)
+        dealer = Hand(betAmount)
         myHand.discardHand()      # ensures hand values are empty / reset
         dealer.discardHand()      # ensures dealer hand values are empty / reset
 
         myHand.newHand(deck, 2)
-        myHand2 = myHand()
+        myHand2 = Hand(betAmount)
+        myHand2.hand = myHand.hand
+        myHand2.total = myHand.total
+        myHand2.numOfAces = myHand.numOfAces
+        myHand2.numOfAcesAs1 = myHand.numOfAcesAs1
         dealer.newHand(deck, 1)
         handStartingValue = myHand.getTotal()
 
         while getHitorStand(myHand2, dealer) == "Hit" :
-            hyHand2.draw1(deck)
+            myHand2.draw1(deck)
 
         while dealer.getTotal() <= 16:
             dealer.draw1(deck)
 
-        #check if player won/lost/tied with 2 cards
+        #check if player1 won/lost/tied with 2 cards
         if (myHand.isBJ()):
             twocard_winValues[handStartingValue] += 1
             twocard_wins += 1
-            money = money + getBlackJackAmount(myHand.betAmount)
+            moneyTwoCard = moneyTwoCard + getBlackJackAmount(myHand.betAmount)
         elif (dealer.isBust()) or (myHand.getTotal() > dealer.getTotal()):
             twocard_winValues[handStartingValue] += 1
             twocard_wins += 1
-            money = money + myHand.betAmount
+            moneyTwoCard = moneyTwoCard + myHand.betAmount
         elif myHand.getTotal() == dealer.getTotal():
             twocard_tieValues[handStartingValue] += 1
             twocard_ties += 1
         elif myHand.getTotal() < dealer.getTotal():
             twocard_lossValues[handStartingValue] += 1
             twocard_losses += 1
-            money = money - myHand.betAmount
+            moneyTwoCard = moneyTwoCard - myHand.betAmount
         else:
             print("Error")
 
@@ -374,22 +382,44 @@ def simulation(gamesToSim, numDecks, reshuf):
             myHand.hand.append(myHand2.hand[2])
         else:
             myHand.draw1(deck)
-            
+
         # check if player won/lost/tied with 3 cards
         if (myHand.isBust()):            #no matter what if player busts, it is a loss
             threecard_lossValues[handStartingValue] += 1
             threecard_losses += 1
+            moneyThreeCard = moneyThreeCard - myHand.betAmount
         elif myHand.getTotal() > dealer.getTotal():
             threecard_winValues[handStartingValue] += 1
             threecard_wins += 1
+            moneyThreeCard = moneyThreeCard + myHand.betAmount
         elif myHand.getTotal() == dealer.getTotal():
             threecard_tieValues[handStartingValue] += 1
             threecard_ties += 1
         elif myHand.getTotal() < dealer.getTotal():
             threecard_lossValues[handStartingValue] += 1
             threecard_losses += 1
+            moneyThreeCard = moneyThreeCard - myHand.betAmount
         else:
              print("Error")
+
+        # check if player's second hand won/lost/tied
+        if (myHand2.isBust()):  # no matter what if player busts, it is a loss
+            secondHand_lossValues[handStartingValue] += 1
+            secondHand_losses += 1
+            moneySecondHand = moneySecondHand - myHand2.betAmount
+        elif myHand.getTotal() > dealer.getTotal():
+            secondHand_winValues[handStartingValue] += 1
+            secondHand_wins += 1
+            moneySecondHand = moneySecondHand + myHand2.betAmount
+        elif myHand.getTotal() == dealer.getTotal():
+            secondHand_tieValues[handStartingValue] += 1
+            secondHand_ties += 1
+        elif myHand.getTotal() < dealer.getTotal():
+            secondHand_lossValues[handStartingValue] += 1
+            secondHand_losses += 1
+            moneySecondHand = moneySecondHand - myHand.betAmount
+        else:
+            print("Error")
 
         if deck.needsReshuf:
             deck.reshuf()
@@ -412,7 +442,8 @@ def simulation(gamesToSim, numDecks, reshuf):
     threecard_tieValues.append(threecard_ties)
 
     #create betting info row
-    betRow = ["Final $", money]
+    betRow = ["Final money for two card bets:", moneyTwoCard,"","Final money for three card bets:", moneyThreeCard,
+              "", "Final money for table bets:", moneySecondHand]
 
     with open("results.csv", "w", newline="") as file:
         writer = csv.writer(file)
@@ -424,8 +455,11 @@ def simulation(gamesToSim, numDecks, reshuf):
         writer.writerows([threecard_winValues])
         writer.writerows([threecard_lossValues])
         writer.writerows([threecard_tieValues])
+        writer.writerows([secondHand_winValues])
+        writer.writerows([secondHand_lossValues])
+        writer.writerows([secondHand_tieValues])
         writer.writerows([betRow])
 
 
 #playBlackJackLoop(2,20)
-#simulation(1000,5,208)
+simulation(10000,5,208)
