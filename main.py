@@ -38,12 +38,14 @@ class Deck():
     needsReshuf = False            #boolean that is enabled to reshuffle cards so it can be triggered after game is complete (not mid hand)
     cardCountOffset = 0            #counts 2-6 as +1, 7-9 as 0, and 10/ace as -1
 
+
     def __init__(self, numOfDecks, reshufNum):
         self.deck = []
         self.discard = []
         self.reshufNum = reshufNum
         suits = ["Hearts", "Clubs", "Spades", "Diamonds"]
         rank = [2, 3, 4, 5, 6, 7, 8, 9, 10, "Jack", "Queen", "King", "Ace"]
+        self.realCardCountOffset = self.cardCountOffset / numOfDecks
 
         for d in range(numOfDecks):
             for s in suits:
@@ -187,14 +189,13 @@ def getBetAmount(deck):
     offSetThreshold = -10     #point at which the player feels it is in his favor
     minAmount = 5            #minimum table bet
     bigBetAmount = 50        #big bet amount when advantageous
-    if deck.cardCountOffset <= offSetThreshold:
+    if deck.realCardCountOffset <= offSetThreshold:
         return bigBetAmount
     else:
         return minAmount
 
 def getBlackJackAmount(initialBet):
     """Determines how much a blackjack pays."""
-    print("Blackjack!")
     return initialBet * 1.5    #set at 3 to 2
 
 def getHitorStand(myHand, dealer):
@@ -311,23 +312,23 @@ def simulation(gamesToSim, numDecks, reshuf):
     counts # of wins if 'player' stays at 2 cards, or hits once"""
 
     head_row = ["Hand Starting Value", 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, "TOTAL"]
-    twocard_winValues = ["Two Card Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    twocard_winValues = ["Two Card Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     twocard_wins = 0
-    twocard_lossValues = ["Two Card Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    twocard_lossValues = ["Two Card Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     twocard_losses = 0
-    twocard_tieValues = ["Two Card Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    twocard_tieValues = ["Two Card Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     twocard_ties = 0
-    threecard_winValues = ["Three Card Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    threecard_winValues = ["Three Card Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     threecard_wins = 0
-    threecard_lossValues = ["Three Card Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    threecard_lossValues = ["Three Card Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     threecard_losses = 0
-    threecard_tieValues = ["Three Card Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    threecard_tieValues = ["Three Card Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     threecard_ties = 0
-    secondHand_winValues = ["Second Hand Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    secondHand_winValues = ["Second Hand Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     secondHand_wins = 0
-    secondHand_lossValues = ["Second Hand Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    secondHand_lossValues = ["Second Hand Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     secondHand_losses = 0
-    secondHand_tieValues = ["Second Hand Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    secondHand_tieValues = ["Second Hand Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     secondHand_ties = 0
     deck = Deck(numDecks, reshuf)
     moneyTwoCard = 0     #starting money for two card
@@ -426,12 +427,15 @@ def simulation(gamesToSim, numDecks, reshuf):
         loops += 1
 
     #remove all 0-3 results from the lists
-    del twocard_winValues[1:5]
-    del twocard_lossValues[1:5]
-    del twocard_tieValues[1:5]
-    del threecard_winValues[1:5]
-    del threecard_lossValues[1:5]
-    del threecard_tieValues[1:5]
+    del twocard_winValues[1:4]
+    del twocard_lossValues[1:4]
+    del twocard_tieValues[1:4]
+    del threecard_winValues[1:4]
+    del threecard_lossValues[1:4]
+    del threecard_tieValues[1:4]
+    del secondHand_winValues[1:4]
+    del secondHand_lossValues[1:4]
+    del secondHand_tieValues[1:4]
 
     #add the total for each list to the final cell
     twocard_winValues.append(twocard_wins)
@@ -440,6 +444,9 @@ def simulation(gamesToSim, numDecks, reshuf):
     threecard_winValues.append(threecard_wins)
     threecard_lossValues.append(threecard_losses)
     threecard_tieValues.append(threecard_ties)
+    secondHand_winValues.append(secondHand_wins)
+    secondHand_lossValues.append(secondHand_losses)
+    secondHand_tieValues.append(secondHand_ties)
 
     #create betting info row
     betRow = ["Final money for two card bets:", moneyTwoCard,"","Final money for three card bets:", moneyThreeCard,
@@ -462,4 +469,4 @@ def simulation(gamesToSim, numDecks, reshuf):
 
 
 #playBlackJackLoop(2,20)
-simulation(10000,5,208)
+simulation(100000,5,104)
