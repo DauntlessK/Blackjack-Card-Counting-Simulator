@@ -257,7 +257,7 @@ def playBlackJackLoop(numDecks, reshuf):
     myHand = Hand(0, False)
     dealer = Hand(0, True)
     bjw = blackjackWindow()
-    deck = Deck(2, 20)
+    deck = Deck(1, 20)
     playing = True
     wins = 0
     losses = 0
@@ -278,7 +278,7 @@ def playBlackJackLoop(numDecks, reshuf):
         myHand.draw1(deck,bjw)
         myHand.draw1(deck,bjw)
         dealer.draw1(deck,bjw)
-        #bjw.addLabels()
+        bjw.addLabels()
         bjw.ML()
         printTable(myHand, dealer)
 
@@ -492,7 +492,7 @@ class blackjackWindow():
         self.window.title("KBB's Blackjack")
 
     def addCard(self, card, isDealer):
-        cardImage = PhotoImage(file="cards/ace_of_spades.png")
+        cardImage = PhotoImage(file=card.img)
         newlabel = Label(self.window, image=cardImage, bg="green")
         if isDealer:
             self.dealerCardLabels.append(newlabel)
