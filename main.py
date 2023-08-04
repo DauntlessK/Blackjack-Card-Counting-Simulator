@@ -1,6 +1,9 @@
 # Kyle Breen-Bondie - Final Project Blackjack Simulator
 import random
 import csv
+#import Image #Image package: py -m pip install Image
+from tkinter import *
+#from Pillow import Image   #pillow package
 
 class Card():
     """Single card object that holds a suit, a rank (card # or face), and a blackjack number value"""
@@ -11,7 +14,9 @@ class Card():
     def __init__(self, suit, rank):
         self.suit = suit
         self.rank = rank
+        self.img = f"cards/{self.get_rank()}_of_{self.suit}.png"
 
+        #set blackjack value
         if isinstance(rank, int):    #assigns value of card (for blackjack) - if its just a number, assign #
             self.value = rank
         elif rank == "Ace":          #assigns values if rank is Ace
@@ -88,13 +93,15 @@ class Hand():
     numOfAces = 0          #counts number of aces
     numOfAcesAs1 = 0       #counts aces that are used as a value of 1 (to prevent bust)
     betAmount = 0
+    isDealer = False       #helps for organizing pngs in window
 
-    def __init__(self, betAmount):
+    def __init__(self, betAmount, isDealer):
         self.hand = []
         self.total = 0
         self.numOfAces = 0
         self.numOfAcesAs1 = 0
         self.betAmount = betAmount
+        self.isDealer = isDealer
 
     def __str__(self):
         toReturn = ""
@@ -122,7 +129,7 @@ class Hand():
         else:
             return False
 
-    def draw1(self, Deck):
+    def draw1(self, Deck, window=None):
         """Draws 1 card from deck in parameter and adds it to the hand's list.
         Maintains hand's total for blackjack."""
         newCard = Deck.draw()
@@ -137,6 +144,9 @@ class Hand():
             if self.isBust():
                 self.total = self.total - 10
                 self.numOfAcesAs1 += 1
+
+        if window != None:
+            window.addCard(newCard, self.isDealer)
 
 
     def showHand(self):
@@ -244,9 +254,10 @@ def getHitorStand(myHand, dealer):
 def playBlackJackLoop(numDecks, reshuf):
     """Loop that gets user input to continually play blackjack. Keeps track of wins, losses and ties for the session."""
     #reshuffle point should not be lower than 10
+    myHand = Hand(0, False)
+    dealer = Hand(0, True)
+    bjw = blackjackWindow()
     deck = Deck(2, 20)
-    myHand = Hand(0)
-    dealer = Hand(0)
     playing = True
     wins = 0
     losses = 0
@@ -264,8 +275,11 @@ def playBlackJackLoop(numDecks, reshuf):
 
         myHand.discardHand()       #ensures hand values are empty / reset
         dealer.discardHand()       #ensures dealer hand values are empty / reset
-        myHand.newHand(deck, 2)
-        dealer.newHand(deck, 1)
+        myHand.draw1(deck,bjw)
+        myHand.draw1(deck,bjw)
+        dealer.draw1(deck,bjw)
+        #bjw.addLabels()
+        bjw.ML()
         printTable(myHand, dealer)
 
         while (myHand.isBust() == False) and (myHand.isBJ() == False):
@@ -274,7 +288,7 @@ def playBlackJackLoop(numDecks, reshuf):
 
             match hitOrStay:
                 case "hit" | "h" | "Hit" | "H":
-                    myHand.draw1(deck)
+                    myHand.draw1(deck,bjw)
                 case _:
                     break
             printTable(myHand, dealer)
@@ -287,9 +301,9 @@ def playBlackJackLoop(numDecks, reshuf):
             print("Blackjack! You win!")
             wins += 1
         else:
-            dealer.draw1(deck)
+            dealer.draw1(deck,bjw)
             while dealer.getTotal() <= 16:
-                dealer.draw1(deck)
+                dealer.draw1(deck,bjw)
             printTable(myHand, dealer)
             if dealer.isBust():
                 print("Dealer is bust! You win!")
@@ -339,8 +353,8 @@ def simulation(gamesToSim, numDecks, reshuf):
     loops = 0
     while loops < gamesToSim:
         betAmount = getBetAmount(deck)
-        myHand = Hand(betAmount)
-        dealer = Hand(betAmount)
+        myHand = Hand(betAmount, False)
+        dealer = Hand(betAmount, True)
         myHand.discardHand()      # ensures hand values are empty / reset
         dealer.discardHand()      # ensures dealer hand values are empty / reset
 
@@ -467,6 +481,35 @@ def simulation(gamesToSim, numDecks, reshuf):
         writer.writerows([secondHand_tieValues])
         writer.writerows([betRow])
 
+################# UI / WINDOWS
+class blackjackWindow():
 
-#playBlackJackLoop(2,20)
-simulation(100000,5,104)
+    def __init__(self):
+        self.window = Tk()
+        self.dealerCardLabels = []
+        self.myHandCardLabels = []
+        self.window.geometry("700x500")
+        self.window.title("KBB's Blackjack")
+
+    def addCard(self, card, isDealer):
+        cardImage = PhotoImage(file="cards/ace_of_spades.png")
+        newlabel = Label(self.window, image=cardImage, bg="green")
+        if isDealer:
+            self.dealerCardLabels.append(newlabel)
+        else:
+            self.myHandCardLabels.append(newlabel)
+
+    def addLabels(self):
+        for x in range (len(self.dealerCardLabels)):
+            self.dealerCardLabels[x].pack()
+        for x in range (len(self.myHandCardLabels)):
+            self.myHandCardLabels[x].pack()
+
+    def ML(self):
+        self.dealerCardLabels[0].pack()
+        self.window.mainloop()
+
+
+
+playBlackJackLoop(2,20)
+#simulation(100000,5,104)
