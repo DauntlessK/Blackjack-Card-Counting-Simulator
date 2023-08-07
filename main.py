@@ -146,7 +146,7 @@ class Hand():
                 self.numOfAcesAs1 += 1
 
         if window != None:
-            window.addCard(newCard, self.isDealer)
+            window.addCard(newCard, self.isDealer, len(self.hand))
 
 
     def showHand(self):
@@ -256,7 +256,6 @@ def playBlackJackLoop(numDecks, reshuf):
     #reshuffle point should not be lower than 10
     myHand = Hand(0, False)
     dealer = Hand(0, True)
-    bjw = blackjackWindow()
     deck = Deck(1, 20)
     playing = True
     wins = 0
@@ -275,11 +274,9 @@ def playBlackJackLoop(numDecks, reshuf):
 
         myHand.discardHand()       #ensures hand values are empty / reset
         dealer.discardHand()       #ensures dealer hand values are empty / reset
-        myHand.draw1(deck,bjw)
-        myHand.draw1(deck,bjw)
-        dealer.draw1(deck,bjw)
-        bjw.addLabels()
-        bjw.ML()
+        myHand.draw1(deck)
+        myHand.draw1(deck)
+        dealer.draw1(deck)
         printTable(myHand, dealer)
 
         while (myHand.isBust() == False) and (myHand.isBJ() == False):
@@ -288,7 +285,7 @@ def playBlackJackLoop(numDecks, reshuf):
 
             match hitOrStay:
                 case "hit" | "h" | "Hit" | "H":
-                    myHand.draw1(deck,bjw)
+                    myHand.draw1(deck)
                 case _:
                     break
             printTable(myHand, dealer)
@@ -301,9 +298,9 @@ def playBlackJackLoop(numDecks, reshuf):
             print("Blackjack! You win!")
             wins += 1
         else:
-            dealer.draw1(deck,bjw)
+            dealer.draw1(deck)
             while dealer.getTotal() <= 16:
-                dealer.draw1(deck,bjw)
+                dealer.draw1(deck)
             printTable(myHand, dealer)
             if dealer.isBust():
                 print("Dealer is bust! You win!")
@@ -481,35 +478,107 @@ def simulation(gamesToSim, numDecks, reshuf):
         writer.writerows([secondHand_tieValues])
         writer.writerows([betRow])
 
+def playBlackJackGUI(numDecks, reshuf):
+    """Loop that gets user input to continually play blackjack. Keeps track of wins, losses and ties for the session."""
+    #reshuffle point should not be lower than 10
+    myHand = Hand(0, False)
+    dealer = Hand(0, True)
+    bjw = blackjackWindow()
+    deck = Deck(1, 20)
+    playing = True
+    wins = 0
+    losses = 0
+    ties = 0
+
+    myHand.discardHand()       #ensures hand values are empty / reset
+    dealer.discardHand()       #ensures dealer hand values are empty / reset
+    myHand.draw1(deck,bjw)
+    myHand.draw1(deck,bjw)
+    dealer.draw1(deck,bjw)
+    bjw.addUI(myHand)
+    bjw.ML()
+    printTable(myHand, dealer)
+
+    while (myHand.isBust() == False) and (myHand.isBJ() == False):
+        #hit or stay input loop, checks if busted or hand is blackjack
+        hitOrStay = input("Hit or Stay?")
+
+        match hitOrStay:
+            case "hit" | "h" | "Hit" | "H":
+                myHand.draw1(deck,bjw)
+            case _:
+                break
+        printTable(myHand, dealer)
+
+    #result checking - then dealer plays if necessary (not busted or blackjack)
+    if myHand.isBust():
+        print("Bust! You lost!")
+        losses += 1
+    elif myHand.isBJ():
+        print("Blackjack! You win!")
+        wins += 1
+    else:
+        dealer.draw1(deck,bjw)
+        while dealer.getTotal() <= 16:
+            dealer.draw1(deck,bjw)
+        printTable(myHand, dealer)
+        if dealer.isBust():
+            print("Dealer is bust! You win!")
+            wins += 1
+        elif myHand > dealer:
+            print("You win!")
+            wins += 1
+        elif myHand == dealer:
+            print("Push!")
+            ties += 1
+        else:
+            print("You lose!")
+            losses += 1
+    printRecord(wins, losses, ties)
+    if deck.needsReshuf:
+        deck.reshuf()
+
+def hit():
+    print("hit")
+
+def stand():
+    print("stand")
+
 ################# UI / WINDOWS
 class blackjackWindow():
 
     def __init__(self):
         self.window = Tk()
-        self.dealerCardLabels = []
-        self.myHandCardLabels = []
-        self.window.geometry("700x500")
+        self.window.geometry("1000x600")
         self.window.title("KBB's Blackjack")
 
-    def addCard(self, card, isDealer):
+    def addCard(self, card, isDealer, len):
         cardImage = PhotoImage(file=card.img)
-        newlabel = Label(self.window, image=cardImage, bg="green")
+        newlabel = Label(self.window, image=cardImage)
+        newlabel.image = cardImage
         if isDealer:
-            self.dealerCardLabels.append(newlabel)
+            newlabel.grid(row=0, column=len)
         else:
-            self.myHandCardLabels.append(newlabel)
+            newlabel.grid(row=1, column=len)
 
     def addLabels(self):
         for x in range (len(self.dealerCardLabels)):
-            self.dealerCardLabels[x].pack()
+            self.dealerCardLabels[x].grid(row=0, column=x)
         for x in range (len(self.myHandCardLabels)):
-            self.myHandCardLabels[x].pack()
+            self.myHandCardLabels[x].grid(row=1, column=x)
+
+    def addUI(self, myHand):
+        hitButton = Button(text="Hit", command=myHand.draw1(deck,bjw))
+        hitButton.grid(row=2, column=1)
+        standButton = Button(text="Stand")
+        standButton.grid(row=2, column=2)
+
 
     def ML(self):
-        self.dealerCardLabels[0].pack()
+        #self.dealerCardLabels[0].pack()
         self.window.mainloop()
 
 
 
-playBlackJackLoop(2,20)
+playBlackJackGUI(1,20)
 #simulation(100000,5,104)
