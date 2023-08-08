@@ -148,8 +148,6 @@ class Hand():
         if window != None:
             window.addCard(newCard, self.isDealer, len(self.hand))
 
-        print(self.hand)
-
 
     def showHand(self):
         for c in self.hand:
@@ -480,12 +478,6 @@ def simulation(gamesToSim, numDecks, reshuf):
         writer.writerows([secondHand_tieValues])
         writer.writerows([betRow])
 
-def checkBlackJackResult(hand):
-    if hand.isBust():
-        return "Bust"
-    if hand.isBJ():
-        return "Blackjack"
-
 def playBlackJackGUI(numDecks, reshuf):
     """Loop that gets user input to continually play blackjack. Keeps track of wins, losses and ties for the session."""
     #reshuffle point should not be lower than 10
@@ -501,59 +493,46 @@ def playBlackJackGUI(numDecks, reshuf):
 
     myHand.discardHand()       #ensures hand values are empty / reset
     dealer.discardHand()       #ensures dealer hand values are empty / reset
-    myHand.draw1(deck,bjw)
-    myHand.draw1(deck,bjw)
-    dealer.draw1(deck,bjw)
+    hit(dealer, deck, bjw)
+    hit(myHand, deck, bjw)
+    hit(myHand, deck, bjw)
     bjw.addUI()
     bjw.ML()
-    printTable(myHand, dealer)
 
-    while (myHand.isBust() == False) and (myHand.isBJ() == False):
-        #hit or stay input loop, checks if busted or hand is blackjack
-        hitOrStay = input("Hit or Stay?")
+    ##main loop
 
-        match hitOrStay:
-            case "hit" | "h" | "Hit" | "H":
-                myHand.draw1(deck,bjw)
-            case _:
-                break
-        printTable(myHand, dealer)
-
-    #result checking - then dealer plays if necessary (not busted or blackjack)
-    if myHand.isBust():
-        print("Bust! You lost!")
-        losses += 1
-    elif myHand.isBJ():
-        print("Blackjack! You win!")
-        wins += 1
-    else:
-        dealer.draw1(deck,bjw)
-        while dealer.getTotal() <= 16:
-            dealer.draw1(deck,bjw)
-        printTable(myHand, dealer)
-        if dealer.isBust():
-            print("Dealer is bust! You win!")
-            wins += 1
-        elif myHand > dealer:
-            print("You win!")
-            wins += 1
-        elif myHand == dealer:
-            print("Push!")
-            ties += 1
-        else:
-            print("You lose!")
-            losses += 1
-    printRecord(wins, losses, ties)
     if deck.needsReshuf:
         deck.reshuf()
 
-def hit(hand, deck):
-    hand.draw1(deck)
+def hit(hand, deck, window=None):
+    if window != None:
+        hand.draw1(deck, window)
+        checkHand(hand, window)
+    else:
+        hand.draw1(deck)
 
-def stand():
-    print("stand")
+def stand(dealer, myHand, deck, window=None):    #not set up for non-window usage
+    dealer.draw1(deck, window)
+    while dealer.total <= 16:
+        dealer.draw1(deck, window)
+    checkHand(dealer, window)
+    checkWinner(dealer, myHand, window)
 
-def startNewGame(myHand, dealer, window):
+def checkHand(hand, window):
+    if hand.isBust() and hand.isDealer:
+        window.gameOver("Win")
+    elif hand.isBust():
+        window.gameOver("Lose")
+
+def checkWinner(myHand, dealer, window):
+    if dealer.total > myHand.total:
+        window.gameOver("Lose")
+    elif dealer.total < myHand.total:
+        window.gameOver("Win")
+    else:
+        print("TIE")
+
+def startNewGame(myHand, dealer, deck, window):
     myHand.discardHand()           # ensures hand values are empty / reset
     dealer.discardHand()           # ensures dealer hand values are empty / reset
     myHand.draw1(deck, window)
@@ -565,29 +544,64 @@ class blackjackWindow():
 
     def __init__(self, numDecks, reshuf, myHand, dealer, deck):
         self.window = Tk()
-        self.window.geometry("1000x600")
+        self.window.geometry("1100x700")
         self.window.title("KBB's Blackjack")
         self.myHand = myHand
         self.dealer = dealer
         self.deck = deck
+        self.wins = 0
+        self.losses = 0
 
     def addCard(self, card, isDealer, len):
+        """Adds a card to the window table- top row is the dealer, bottom player"""
         cardImage = PhotoImage(file=card.img)
         newlabel = Label(self.window, image=cardImage)
         newlabel.image = cardImage
         if isDealer:
-            newlabel.grid(row=0, column=len)
+            newlabel.grid(row=2, column=len+1)
         else:
-            newlabel.grid(row=1, column=len)
+            newlabel.grid(row=3, column=len+1)
 
     def addUI(self):
-        hitButton = Button(text="Hit", command=hit(self.myHand, self.deck))
-        hitButton.grid(row=2, column=1)
-        standButton = Button(text="Stand")
-        standButton.grid(row=2, column=2)
+        """Adds buttons and other elements to bottom of table window"""
+        hitButton = Button(text="Hit", command=lambda: hit(self.myHand, self.deck, self)) #needs to pass SELF not SELF.WINDOW for some reason
+        hitButton.grid(row=4, column=2)
+        standButton = Button(text="Stand", command=lambda: stand(self.dealer, self.myHand, self.deck, self))
+        standButton.grid(row=4, column=3)
+        winsLabel = Label(text=f'W: {self.wins}')
+        winsLabel.grid(row=0,column=0)
+        lossesLabel = Label(text = f'L: {self.losses}')
+        lossesLabel.grid(row=0, column=1)
+
+    def gameOver(self, result):
+        print("Game Over!")
+        if result == "Win":
+            self.wins += 1
+            winsLabel = Label(text=f'W: {self.wins}')
+            winsLabel.grid(row=0, column=0)
+        elif result == "Lose":
+            self.losses += 1
+            lossesLabel = Label(text=f'L: {self.losses}')
+            lossesLabel.grid(row=0, column=1)
+        #NEEDTODO: BUTTON FOR STARTING A NEW GAME
+        self.clearCards()
+        startNewGame(self.myHand,self.dealer,self.deck,self)
+
+    def clearCards(self):
+        for x in range(len(self.myHand.hand)):
+            if x > 1:
+                cardImage = PhotoImage(file="cards/nocard.png")
+                newlabel = Label(self.window, image=cardImage)
+                newlabel.grid(row=3, column= x+2)
+
+        for x in range(len(self.dealer.hand)):
+            print(x)
+            if x > 0:
+                cardImage = PhotoImage(file="cards/nocard.png")
+                newlabel = Label(self.window, image=cardImage)
+                newlabel.grid(row=2, column=x+2)
 
     def ML(self):
-        #self.dealerCardLabels[0].pack()
         self.window.mainloop()
 
 
