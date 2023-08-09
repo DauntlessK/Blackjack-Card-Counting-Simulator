@@ -544,6 +544,9 @@ def startNewGame(myHand, dealer, deck, window):
         deck.reshuf()
     window.activatePlayButtons()
 
+    #clear winner/loser label
+    window.clearWLLabel()
+
     #draw cards
     myHand.draw1(deck, window)
     myHand.draw1(deck, window)
@@ -552,6 +555,9 @@ def startNewGame(myHand, dealer, deck, window):
     #check if blackjack was dealt
     if myHand.isBJ():
         window.gameOver("Win")
+
+def quitWindow(window):
+    window.destroy()
 
 ################# UI / WINDOWS
 class blackjackWindow():
@@ -568,20 +574,25 @@ class blackjackWindow():
         self.losses = 0
 
         #add buttons to window in grid as well as wins and losses labels
-        self.hitButton = Button(text="Hit",
+        self.hitButton = Button(text="Hit", padx=20, pady=20,
                                 command=lambda: hit(self.myHand, self.deck, self))
                                 # needs to pass SELF not SELF.WINDOW for some reason
         self.hitButton.grid(row=4, column=2)
-        self.standButton = Button(text="Stand",
+        self.standButton = Button(text="Stand", padx=20, pady=20,
                                   command=lambda: stand(self.dealer, self.myHand, self.deck, self))
         self.standButton.grid(row=4, column=3)
         self.winsLabel = Label(text=f'W: {self.wins}', font=(14))
         self.winsLabel.grid(row=0, column=0)
         self.lossesLabel = Label(text=f'L: {self.losses}', font=(14))
         self.lossesLabel.grid(row=0, column=1)
-        self.newGameButton = Button(text="New Game", state=DISABLED,
+        self.newGameButton = Button(text="New Game", state=DISABLED, padx=20, pady=20,
                                     command=lambda: startNewGame(self.myHand, self.dealer, self.deck, self))
         self.newGameButton.grid(row=4, column=4)
+        self.quitButton = Button(text= "Quit", padx=20, pady=20,
+                                 command= lambda: quitWindow(self.window))
+        self.quitButton.grid(row=4, column = 6)
+        self.winnerLabel = Label(text="WINNER", bg="#D0F0C0", font=(14))
+        self.loserLabel = Label(text="LOSER", bg="#FA8072", font=(14))
 
         startNewGame(self.myHand, self.dealer, self.deck, self)
 
@@ -602,7 +613,7 @@ class blackjackWindow():
         """Triggers the end of the game, in a win or a loss state based on the string passed.
         Responsible for incrementing wins/losses, as well as changing the button states at game over."""
 
-        print("Game Over!")
+        print("Game Over! ", result)
         print(self.dealer)
         print(self.myHand)
 
@@ -614,12 +625,14 @@ class blackjackWindow():
         #check win or loss and increment count, then recreate and place label
         if result == "Win":
             self.wins += 1
-            winsLabel = Label(text=f'W: {self.wins}')
+            winsLabel = Label(text=f'W: {self.wins}', font=(14))
             winsLabel.grid(row=0, column=0)
+            self.winnerLabel.grid(row=4, column =0, columnspan=2)
         elif result == "Lose":
             self.losses += 1
-            lossesLabel = Label(text=f'L: {self.losses}')
+            lossesLabel = Label(text=f'L: {self.losses}', font=(14))
             lossesLabel.grid(row=0, column=1)
+            self.loserLabel.grid(row=4, column=0, columnspan=2)
 
     def clearCards(self):
         """Places blank images over any card images that were placed previously to remove all cards"""
@@ -642,6 +655,11 @@ class blackjackWindow():
         self.hitButton.config(state=ACTIVE)
         self.standButton.config(state=ACTIVE)
         self.newGameButton.config(state=DISABLED)
+
+    def clearWLLabel(self):
+        #self.winnerLabel.config(text="", bg="#000000")
+        #self.loserLabel.config(text="", bg="#000000")
+        print("TEST")
 
     def ML(self):
         self.window.mainloop()
