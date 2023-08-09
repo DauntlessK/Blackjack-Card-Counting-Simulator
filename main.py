@@ -4,6 +4,7 @@ import csv
 #import Image #Image package: py -m pip install Image
 from tkinter import *
 #from Pillow import Image   #pillow package
+import time
 
 class Card():
     """Single card object that holds a suit, a rank (card # or face), and a blackjack number value"""
@@ -103,14 +104,6 @@ class Hand():
         self.betAmount = betAmount
         self.isDealer = isDealer
 
-    def __str__(self):
-        toReturn = ""
-        for c in range(len(self.hand)):
-            if c != 0:
-                toReturn += ", "
-            toReturn += str(self.hand[c])
-        return toReturn
-
     def __eq__(self, otherHand):
         if self.total == otherHand.getTotal():
             return True
@@ -128,6 +121,17 @@ class Hand():
             return True
         else:
             return False
+
+    def __str__(self):
+        if self.isDealer:
+            toreturn = "Dealer Hand: "
+        else:
+            toreturn = "My Hand: "
+        for x in range (len(self.hand)):
+            toreturn += str(self.hand[x])
+            toreturn += " - "
+        toreturn += str(self.total)
+        return toreturn
 
     def draw1(self, Deck, window=None):
         """Draws 1 card from deck in parameter and adds it to the hand's list.
@@ -149,16 +153,19 @@ class Hand():
             window.addCard(newCard, self.isDealer, len(self.hand))
 
 
-    def showHand(self):
-        for c in self.hand:
-            print(c)
-
     def getTotal(self):
         return self.total
 
     def isBust(self):
         """Checks if hand is bust and returns boolean"""
         if self.total > 21:
+            return True
+        else:
+            return False
+
+    def isNotBust(self):
+        """Checks if hand is bust and returns boolean"""
+        if self.total <= 21:
             return True
         else:
             return False
@@ -252,7 +259,7 @@ def getHitorStand(myHand, dealer):
         return "Hit"
 
 def playBlackJackLoop(numDecks, reshuf):
-    """Loop that gets user input to continually play blackjack. Keeps track of wins, losses and ties for the session."""
+    """Non-GUI version of BJ game (played via text in the console)"""
     #reshuffle point should not be lower than 10
     myHand = Hand(0, False)
     dealer = Hand(0, True)
@@ -491,20 +498,10 @@ def playBlackJackGUI(numDecks, reshuf):
     ties = 0
     bjw = blackjackWindow(numDecks, reshuf, myHand, dealer, deck)
 
-    myHand.discardHand()       #ensures hand values are empty / reset
-    dealer.discardHand()       #ensures dealer hand values are empty / reset
-    hit(dealer, deck, bjw)
-    hit(myHand, deck, bjw)
-    hit(myHand, deck, bjw)
-    bjw.addUI()
     bjw.ML()
 
-    ##main loop
-
-    if deck.needsReshuf:
-        deck.reshuf()
-
 def hit(hand, deck, window=None):
+    """Triggered when hit button is pushed. Adds new card to player's hand."""
     if window != None:
         hand.draw1(deck, window)
         checkHand(hand, window)
@@ -512,35 +509,53 @@ def hit(hand, deck, window=None):
         hand.draw1(deck)
 
 def stand(dealer, myHand, deck, window=None):    #not set up for non-window usage
+    """Triggered when stand button is pushed. Prompts dealer's actions then calls check winner."""
     dealer.draw1(deck, window)
     while dealer.total <= 16:
         dealer.draw1(deck, window)
-    checkHand(dealer, window)
-    checkWinner(dealer, myHand, window)
+    checkWinner(myHand, dealer, window)
 
 def checkHand(hand, window):
+    """Mid-game check to see if the game is over (mainly to check after a hit if player busted)"""
     if hand.isBust() and hand.isDealer:
         window.gameOver("Win")
     elif hand.isBust():
         window.gameOver("Lose")
 
 def checkWinner(myHand, dealer, window):
-    if dealer.total > myHand.total:
+    """If it gets to the end of the game, this checks final winner"""
+    if dealer.total > myHand.total and dealer.isNotBust():
         window.gameOver("Lose")
-    elif dealer.total < myHand.total:
+    elif dealer.total < myHand.total or dealer.isBust():
         window.gameOver("Win")
     else:
         print("TIE")
+        window.gameOver("Tie")
 
 def startNewGame(myHand, dealer, deck, window):
+    """Begins new game- clearing window, then removing cards from hands, then reshuffling if necessary then dealing"""
+    #window must be cleared first- putting blank image over all existing card images
+    window.clearCards()
     myHand.discardHand()           # ensures hand values are empty / reset
     dealer.discardHand()           # ensures dealer hand values are empty / reset
+
+    #check for reshuffle
+    if deck.needsReshuf:
+        deck.reshuf()
+    window.activatePlayButtons()
+
+    #draw cards
     myHand.draw1(deck, window)
     myHand.draw1(deck, window)
     dealer.draw1(deck, window)
 
+    #check if blackjack was dealt
+    if myHand.isBJ():
+        window.gameOver("Win")
+
 ################# UI / WINDOWS
 class blackjackWindow():
+    """Blackjack GUI window to play blackjack. Holds hand and deck info, as well as wins and losses."""
 
     def __init__(self, numDecks, reshuf, myHand, dealer, deck):
         self.window = Tk()
@@ -552,29 +567,51 @@ class blackjackWindow():
         self.wins = 0
         self.losses = 0
 
+        #add buttons to window in grid as well as wins and losses labels
+        self.hitButton = Button(text="Hit",
+                                command=lambda: hit(self.myHand, self.deck, self))
+                                # needs to pass SELF not SELF.WINDOW for some reason
+        self.hitButton.grid(row=4, column=2)
+        self.standButton = Button(text="Stand",
+                                  command=lambda: stand(self.dealer, self.myHand, self.deck, self))
+        self.standButton.grid(row=4, column=3)
+        self.winsLabel = Label(text=f'W: {self.wins}', font=(14))
+        self.winsLabel.grid(row=0, column=0)
+        self.lossesLabel = Label(text=f'L: {self.losses}', font=(14))
+        self.lossesLabel.grid(row=0, column=1)
+        self.newGameButton = Button(text="New Game", state=DISABLED,
+                                    command=lambda: startNewGame(self.myHand, self.dealer, self.deck, self))
+        self.newGameButton.grid(row=4, column=4)
+
+        startNewGame(self.myHand, self.dealer, self.deck, self)
+
     def addCard(self, card, isDealer, len):
         """Adds a card to the window table- top row is the dealer, bottom player"""
+
+        #get image, then place into label
         cardImage = PhotoImage(file=card.img)
         newlabel = Label(self.window, image=cardImage)
         newlabel.image = cardImage
+        #place new card image into correct row (dealer or player) then correct column
         if isDealer:
             newlabel.grid(row=2, column=len+1)
         else:
             newlabel.grid(row=3, column=len+1)
 
-    def addUI(self):
-        """Adds buttons and other elements to bottom of table window"""
-        hitButton = Button(text="Hit", command=lambda: hit(self.myHand, self.deck, self)) #needs to pass SELF not SELF.WINDOW for some reason
-        hitButton.grid(row=4, column=2)
-        standButton = Button(text="Stand", command=lambda: stand(self.dealer, self.myHand, self.deck, self))
-        standButton.grid(row=4, column=3)
-        winsLabel = Label(text=f'W: {self.wins}')
-        winsLabel.grid(row=0,column=0)
-        lossesLabel = Label(text = f'L: {self.losses}')
-        lossesLabel.grid(row=0, column=1)
-
     def gameOver(self, result):
+        """Triggers the end of the game, in a win or a loss state based on the string passed.
+        Responsible for incrementing wins/losses, as well as changing the button states at game over."""
+
         print("Game Over!")
+        print(self.dealer)
+        print(self.myHand)
+
+        #disable playing buttons, then enable new game button
+        self.newGameButton.config(state=ACTIVE)
+        self.hitButton.config(state=DISABLED)
+        self.standButton.config(state=DISABLED)
+
+        #check win or loss and increment count, then recreate and place label
         if result == "Win":
             self.wins += 1
             winsLabel = Label(text=f'W: {self.wins}')
@@ -583,23 +620,28 @@ class blackjackWindow():
             self.losses += 1
             lossesLabel = Label(text=f'L: {self.losses}')
             lossesLabel.grid(row=0, column=1)
-        #NEEDTODO: BUTTON FOR STARTING A NEW GAME
-        self.clearCards()
-        startNewGame(self.myHand,self.dealer,self.deck,self)
 
     def clearCards(self):
+        """Places blank images over any card images that were placed previously to remove all cards"""
+        #clear player hand
         for x in range(len(self.myHand.hand)):
             if x > 1:
                 cardImage = PhotoImage(file="cards/nocard.png")
                 newlabel = Label(self.window, image=cardImage)
                 newlabel.grid(row=3, column= x+2)
 
+        #clear dealer hand
         for x in range(len(self.dealer.hand)):
-            print(x)
             if x > 0:
                 cardImage = PhotoImage(file="cards/nocard.png")
                 newlabel = Label(self.window, image=cardImage)
                 newlabel.grid(row=2, column=x+2)
+
+    def activatePlayButtons(self):
+        """Switches button states to allow playing"""
+        self.hitButton.config(state=ACTIVE)
+        self.standButton.config(state=ACTIVE)
+        self.newGameButton.config(state=DISABLED)
 
     def ML(self):
         self.window.mainloop()
