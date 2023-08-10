@@ -52,13 +52,15 @@ class Deck():
         suits = ["Hearts", "Clubs", "Spades", "Diamonds"]
         rank = [2, 3, 4, 5, 6, 7, 8, 9, 10, "Jack", "Queen", "King", "Ace"]
         self.realCardCountOffset = self.cardCountOffset / numOfDecks
+        self.numOfDecksLeft = numOfDecks
+        self.needsReshuf = False
 
         for d in range(numOfDecks):
             for s in suits:
                 for r in rank:
                     self.deck.append(Card(s, r))
 
-        self.reshuf()
+        self.shuf()
 
     def shuf(self):
         """shuffles deck list"""
@@ -72,18 +74,24 @@ class Deck():
         self.deck = newDeck
         self.discard.clear()
         self.needsReshuf = False
+        self.cardCountOffset = 0
 
     def draw(self):
         """Returns one card by drawing (pop) a card from deck and adding that to the discard list"""
         if len(self.deck) < self.reshufNum:
             self.needsReshuf = True
         drawnCard = self.deck.pop()
+
         #adjusts offset
         if drawnCard.value <= 6:
             self.cardCountOffset += 1
         elif drawnCard.value >= 10:
             self.cardCountOffset -= 1
+
         self.discard.append(drawnCard)
+        self.numOfDecksLeft = len(self.deck) / 52
+        self.realCardCountOffset = self.cardCountOffset / self.numOfDecksLeft
+
         return(drawnCard)
 
 class Hand():
@@ -103,6 +111,7 @@ class Hand():
         self.numOfAcesAs1 = 0
         self.betAmount = betAmount
         self.isDealer = isDealer
+        self.isSoft = False
 
     def __eq__(self, otherHand):
         if self.total == otherHand.getTotal():
@@ -141,6 +150,7 @@ class Hand():
 
         if newCard.rank == "Ace":
             self.numOfAces += 1
+            self.isSoft = True
 
         self.total = self.total + newCard.value
 
@@ -148,6 +158,9 @@ class Hand():
             if self.isBust():
                 self.total = self.total - 10
                 self.numOfAcesAs1 += 1
+
+        if self.numOfAcesAs1 == self.numOfAces:
+            self.isSoft = False
 
         if window != None:
             window.addCard(newCard, self.isDealer, len(self.hand))
@@ -203,10 +216,10 @@ def printRecord(w, l, t):
 def getBetAmount(deck):
     """Controls the bet amount, what the bet threshold is, and the min and max bets.
     Returns the bet."""
-    offSetThreshold = -10     #point at which the player feels it is in his favor
-    minAmount = 5            #minimum table bet
-    bigBetAmount = 50        #big bet amount when advantageous
-    if deck.realCardCountOffset <= offSetThreshold:
+    offSetThreshold = +4.2    #point at which the player feels it is in his favor
+    minAmount = 5             #minimum table bet
+    bigBetAmount = 100        #big bet amount when advantageous
+    if deck.realCardCountOffset >= offSetThreshold:
         return bigBetAmount
     else:
         return minAmount
@@ -222,6 +235,10 @@ def getHitorStand(myHand, dealer):
 
     dealerAdjustedValue = dealer.total - 3 #need to offset dealer totals by 3 because columns start at 2, not 0
 
+    #determine whether to use hard or soft hand table
+    if myHand.isSoft:
+    ##NEEDTODO: need to make a way to create the two action tables only once then reference correct chart
+    ##          based on whether the hand is soft or hard
     #dealer:  2  3  4  5  6  7  8  9 10 11
     table = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #0   notused
              [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  #1   notused
@@ -250,8 +267,8 @@ def getHitorStand(myHand, dealer):
     for x in range(22):
         col.append(table[x])
     #print(col[17][0])
-    if myHand.total < 21:
-        return "Stand"
+    #if myHand.total > 21:
+    #    return "Stand"
     val = col[myHand.total][dealerAdjustedValue]
     if val == 0:
         return "Stand"
@@ -325,118 +342,72 @@ def playBlackJackLoop(numDecks, reshuf):
         if deck.needsReshuf:
             deck.reshuf()
 
+
 def simulation(gamesToSim, numDecks, reshuf):
     """Simulate x number of games with y number of decks
-    counts # of wins if 'player' stays at 2 cards, or hits once"""
+    and bets the same hand 3 different ways to test the best way to make money"""
 
     head_row = ["Hand Starting Value", 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, "TOTAL"]
-    twocard_winValues = ["Two Card Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    twocard_wins = 0
-    twocard_lossValues = ["Two Card Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    twocard_losses = 0
-    twocard_tieValues = ["Two Card Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    twocard_ties = 0
-    threecard_winValues = ["Three Card Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    threecard_wins = 0
-    threecard_lossValues = ["Three Card Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    threecard_losses = 0
-    threecard_tieValues = ["Three Card Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    threecard_ties = 0
-    secondHand_winValues = ["Second Hand Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    secondHand_wins = 0
-    secondHand_lossValues = ["Second Hand Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    secondHand_losses = 0
-    secondHand_tieValues = ["Second Hand Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    secondHand_ties = 0
+    hand_winValues = ["Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    hand_wins = 0
+    hand_lossValues = ["Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    hand_losses = 0
+    hand_tieValues = ["Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    hand_ties = 0
     deck = Deck(numDecks, reshuf)
-    moneyTwoCard = 0     #starting money for two card
-    moneyThreeCard = 0   #starting money for three card
-    moneySecondHand = 0  #starting money for second hand (that hits/stands according to table)
-
+    moneyFlatBet = 0  # starting money for flat min bet
+    flatBetAmount = 5  # how much flat better bets
+    moneyRandBet = 0  # starting money for random bet
+    minRandBetRange = 5  # min amount for random bet
+    maxRandBetRange = 20  # max amount for random bet
+    moneyCardCountBet = 0  # starting money for card counting bet method
 
     loops = 0
     while loops < gamesToSim:
         betAmount = getBetAmount(deck)
         myHand = Hand(betAmount, False)
         dealer = Hand(betAmount, True)
-        myHand.discardHand()      # ensures hand values are empty / reset
-        dealer.discardHand()      # ensures dealer hand values are empty / reset
+        myHand.discardHand()  # ensures hand values are empty / reset
+        dealer.discardHand()  # ensures dealer hand values are empty / reset
 
         myHand.newHand(deck, 2)
-        myHand2 = Hand(betAmount)
-        myHand2.hand = myHand.hand
-        myHand2.total = myHand.total
-        myHand2.numOfAces = myHand.numOfAces
-        myHand2.numOfAcesAs1 = myHand.numOfAcesAs1
         dealer.newHand(deck, 1)
         handStartingValue = myHand.getTotal()
 
-        while getHitorStand(myHand2, dealer) == "Hit" :
-            myHand2.draw1(deck)
-
-        while dealer.getTotal() <= 16:
-            dealer.draw1(deck)
-
-        #check if player1 won/lost/tied with 2 cards
-        if (myHand.isBJ()):
-            twocard_winValues[handStartingValue] += 1
-            twocard_wins += 1
-            moneyTwoCard = moneyTwoCard + getBlackJackAmount(myHand.betAmount)
-        elif (dealer.isBust()) or (myHand.getTotal() > dealer.getTotal()):
-            twocard_winValues[handStartingValue] += 1
-            twocard_wins += 1
-            moneyTwoCard = moneyTwoCard + myHand.betAmount
-        elif myHand.getTotal() == dealer.getTotal():
-            twocard_tieValues[handStartingValue] += 1
-            twocard_ties += 1
-        elif myHand.getTotal() < dealer.getTotal():
-            twocard_lossValues[handStartingValue] += 1
-            twocard_losses += 1
-            moneyTwoCard = moneyTwoCard - myHand.betAmount
-        else:
-            print("Error")
-
-        #if hand2 did take a card, add third card to first hand so that the hands first 3 cards match
-        if len(myHand2.hand) > 2:
-            myHand.hand.append(myHand2.hand[2])
-        else:
+        while getHitorStand(myHand, dealer) == "Hit" and myHand.getTotal() < 21:
             myHand.draw1(deck)
 
-        # check if player won/lost/tied with 3 cards
-        if (myHand.isBust()):            #no matter what if player busts, it is a loss
-            threecard_lossValues[handStartingValue] += 1
-            threecard_losses += 1
-            moneyThreeCard = moneyThreeCard - myHand.betAmount
-        elif myHand.getTotal() > dealer.getTotal():
-            threecard_winValues[handStartingValue] += 1
-            threecard_wins += 1
-            moneyThreeCard = moneyThreeCard + myHand.betAmount
-        elif myHand.getTotal() == dealer.getTotal():
-            threecard_tieValues[handStartingValue] += 1
-            threecard_ties += 1
-        elif myHand.getTotal() < dealer.getTotal():
-            threecard_lossValues[handStartingValue] += 1
-            threecard_losses += 1
-            moneyThreeCard = moneyThreeCard - myHand.betAmount
-        else:
-             print("Error")
+        while dealer.getTotal() <= 16 and myHand.isNotBust():
+            dealer.draw1(deck)
 
-        # check if player's second hand won/lost/tied
-        if (myHand2.isBust()):  # no matter what if player busts, it is a loss
-            secondHand_lossValues[handStartingValue] += 1
-            secondHand_losses += 1
-            moneySecondHand = moneySecondHand - myHand2.betAmount
-        elif myHand.getTotal() > dealer.getTotal():
-            secondHand_winValues[handStartingValue] += 1
-            secondHand_wins += 1
-            moneySecondHand = moneySecondHand + myHand2.betAmount
+        # check win/loss/tie scenarios
+        if (myHand.isBJ()):
+            hand_winValues[handStartingValue] += 1
+            hand_wins += 1
+
+            # get payouts for blackjack and add amounts to existing totals
+            moneyCardCountBet = moneyCardCountBet + getBlackJackAmount(myHand.betAmount)
+            moneyFlatBet = moneyFlatBet + getBlackJackAmount(flatBetAmount)
+            moneyRandBet = moneyRandBet + getBlackJackAmount(random.randint(minRandBetRange, maxRandBetRange))
+        elif (myHand.getTotal() < dealer.getTotal() and dealer.isNotBust()) or myHand.isBust():
+            hand_lossValues[handStartingValue] += 1
+            hand_losses += 1
+
+            # money adjustments for player being less than dealer (if dealer is not bust) or if player busted
+            moneyCardCountBet = moneyCardCountBet - getBetAmount(deck)
+            moneyFlatBet = moneyFlatBet - flatBetAmount
+            moneyRandBet = moneyRandBet - random.randint(minRandBetRange, maxRandBetRange)
+        elif (dealer.isBust()) or (myHand.getTotal() > dealer.getTotal()):
+            hand_winValues[handStartingValue] += 1
+            hand_wins += 1
+
+            # money adjustments for player being less than dealer (if dealer is not bust) or if player busted
+            moneyCardCountBet = moneyCardCountBet + getBetAmount(deck)
+            moneyFlatBet = moneyFlatBet + flatBetAmount
+            moneyRandBet = moneyRandBet + random.randint(minRandBetRange, maxRandBetRange)
         elif myHand.getTotal() == dealer.getTotal():
-            secondHand_tieValues[handStartingValue] += 1
-            secondHand_ties += 1
-        elif myHand.getTotal() < dealer.getTotal():
-            secondHand_lossValues[handStartingValue] += 1
-            secondHand_losses += 1
-            moneySecondHand = moneySecondHand - myHand.betAmount
+            hand_tieValues[handStartingValue] += 1
+            hand_ties += 1
         else:
             print("Error")
 
@@ -444,46 +415,31 @@ def simulation(gamesToSim, numDecks, reshuf):
             deck.reshuf()
         loops += 1
 
-    #remove all 0-3 results from the lists
-    del twocard_winValues[1:4]
-    del twocard_lossValues[1:4]
-    del twocard_tieValues[1:4]
-    del threecard_winValues[1:4]
-    del threecard_lossValues[1:4]
-    del threecard_tieValues[1:4]
-    del secondHand_winValues[1:4]
-    del secondHand_lossValues[1:4]
-    del secondHand_tieValues[1:4]
+    # remove all 0-3 results from the lists
+    del hand_winValues[1:4]
+    del hand_lossValues[1:4]
+    del hand_tieValues[1:4]
 
-    #add the total for each list to the final cell
-    twocard_winValues.append(twocard_wins)
-    twocard_lossValues.append(twocard_losses)
-    twocard_tieValues.append(twocard_ties)
-    threecard_winValues.append(threecard_wins)
-    threecard_lossValues.append(threecard_losses)
-    threecard_tieValues.append(threecard_ties)
-    secondHand_winValues.append(secondHand_wins)
-    secondHand_lossValues.append(secondHand_losses)
-    secondHand_tieValues.append(secondHand_ties)
+    # add the total for each list to the final cell
+    hand_winValues.append(hand_wins)
+    hand_lossValues.append(hand_losses)
+    hand_tieValues.append(hand_ties)
 
-    #create betting info row
-    betRow = ["Final money for two card bets:", moneyTwoCard,"","Final money for three card bets:", moneyThreeCard,
-              "", "Final money for table bets:", moneySecondHand]
+    # create betting info row
+    betRow1 = ["$ for flat bet:", moneyFlatBet]
+    betRow2 = ["$ for random bet:", moneyRandBet]
+    betRow3 = ["$ for card count bet:", moneyCardCountBet]
 
     with open("results.csv", "w", newline="") as file:
         writer = csv.writer(file)
 
         writer.writerows([head_row])
-        writer.writerows([twocard_winValues])
-        writer.writerows([twocard_lossValues])
-        writer.writerows([twocard_tieValues])
-        writer.writerows([threecard_winValues])
-        writer.writerows([threecard_lossValues])
-        writer.writerows([threecard_tieValues])
-        writer.writerows([secondHand_winValues])
-        writer.writerows([secondHand_lossValues])
-        writer.writerows([secondHand_tieValues])
-        writer.writerows([betRow])
+        writer.writerows([hand_winValues])
+        writer.writerows([hand_lossValues])
+        writer.writerows([hand_tieValues])
+        writer.writerows([betRow1])
+        writer.writerows([betRow2])
+        writer.writerows([betRow3])
 
 def playBlackJackGUI(numDecks, reshuf):
     """Loop that gets user input to continually play blackjack. Keeps track of wins, losses and ties for the session."""
@@ -532,7 +488,7 @@ def checkWinner(myHand, dealer, window):
         print("TIE")
         window.gameOver("Tie")
 
-def startNewGame(myHand, dealer, deck, window):
+def startNewGame(myHand, dealer, deck, games, window):
     """Begins new game- clearing window, then removing cards from hands, then reshuffling if necessary then dealing"""
     #window must be cleared first- putting blank image over all existing card images
     window.clearCards()
@@ -545,7 +501,8 @@ def startNewGame(myHand, dealer, deck, window):
     window.activatePlayButtons()
 
     #clear winner/loser label
-    window.clearWLLabel()
+    if games > 0:
+        window.clearWLLabel()
 
     #draw cards
     myHand.draw1(deck, window)
@@ -572,6 +529,7 @@ class blackjackWindow():
         self.deck = deck
         self.wins = 0
         self.losses = 0
+        self.games = 0
 
         #add buttons to window in grid as well as wins and losses labels
         self.hitButton = Button(text="Hit", padx=20, pady=20,
@@ -586,7 +544,7 @@ class blackjackWindow():
         self.lossesLabel = Label(text=f'L: {self.losses}', font=(14))
         self.lossesLabel.grid(row=0, column=1)
         self.newGameButton = Button(text="New Game", state=DISABLED, padx=20, pady=20,
-                                    command=lambda: startNewGame(self.myHand, self.dealer, self.deck, self))
+                                    command=lambda: startNewGame(self.myHand, self.dealer, self.deck, self.games, self))
         self.newGameButton.grid(row=4, column=4)
         self.quitButton = Button(text= "Quit", padx=20, pady=20,
                                  command= lambda: quitWindow(self.window))
@@ -594,7 +552,7 @@ class blackjackWindow():
         self.winnerLabel = Label(text="WINNER", bg="#D0F0C0", font=(14))
         self.loserLabel = Label(text="LOSER", bg="#FA8072", font=(14))
 
-        startNewGame(self.myHand, self.dealer, self.deck, self)
+        startNewGame(self.myHand, self.dealer, self.deck, self.games, self)
 
     def addCard(self, card, isDealer, len):
         """Adds a card to the window table- top row is the dealer, bottom player"""
@@ -633,6 +591,7 @@ class blackjackWindow():
             lossesLabel = Label(text=f'L: {self.losses}', font=(14))
             lossesLabel.grid(row=0, column=1)
             self.loserLabel.grid(row=4, column=0, columnspan=2)
+        self.games += 1
 
     def clearCards(self):
         """Places blank images over any card images that were placed previously to remove all cards"""
@@ -657,13 +616,13 @@ class blackjackWindow():
         self.newGameButton.config(state=DISABLED)
 
     def clearWLLabel(self):
-        #self.winnerLabel.config(text="", bg="#000000")
-        #self.loserLabel.config(text="", bg="#000000")
-        print("TEST")
+        self.winnerLabel.config(text="", bg="#000000")
+        self.loserLabel.config(text="", bg="#000000")
 
     def ML(self):
         self.window.mainloop()
 
 
-playBlackJackGUI(1,20)
-#simulation(100000,5,104)
+#playBlackJackGUI(1,20)
+simulation(100000,5,104)
+#simulation(2,5,104)
