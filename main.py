@@ -228,17 +228,102 @@ def getBlackJackAmount(initialBet):
     """Determines how much a blackjack pays."""
     return initialBet * 1.5    #set at 3 to 2
 
+class ActionTable():
+
+    def __init__ (self):
+                # dealer:  2  3  4  5  6  7  8  9 10 11
+        self.hardTable = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #0   notused
+                          [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  #1   notused
+                          [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  #2   notused
+                          [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  #3   notused
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #4
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #5
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #6
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #7
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #8
+                          [1, 2, 2, 2, 2, 1, 1, 1, 1, 1],  #9
+                          [2, 2, 2, 2, 2, 2, 2, 2, 1, 1],  #10
+                          [2, 2, 2, 2, 2, 2, 2, 2, 2, 1],  #11
+                          [1, 1, 0, 0, 0, 1, 1, 1, 1, 1],  #12
+                          [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],  #13
+                          [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],  #14
+                          [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],  #15
+                          [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],  #16
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  #17
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  #18
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  #19
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  #20
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]  #21
+
+        self.hardTableCol = []
+        for x in range(22):
+            self.hardTableCol.append(self.hardTable[x])
+
+                # dealer:  2  3  4  5  6  7  8  9 10 11
+        self.softTable = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 0   notused
+                          [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  # 1   notused
+                          [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  # 2   notused
+                          [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  # 3   notused
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 4
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 5
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 6
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 7
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 8
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 9
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10
+                          [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 11
+                          [1, 1, 0, 0, 0, 1, 1, 1, 1, 1],  # 12      not sure about this row
+                          [1, 1, 1, 2, 2, 1, 1, 1, 1, 1],  # 13
+                          [1, 1, 1, 2, 2, 1, 1, 1, 1, 1],  # 14
+                          [1, 1, 2, 2, 2, 1, 1, 1, 1, 1],  # 15
+                          [1, 1, 2, 2, 2, 1, 1, 1, 1, 1],  # 16
+                          [1, 2, 2, 2, 2, 1, 1, 1, 1, 1],  # 17
+                          [0, 2, 2, 2, 2, 0, 0, 1, 1, 1],  # 18
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 19
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 20
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]  # 21
+
+        self.softTableCol = []
+        for x in range(22):
+            self.softTableCol.append(self.softTable[x])
+
+    def getHardAction(self, hand, dealer):
+        dealerAdjustedValue = dealer.total - 2  # need to offset dealer totals by 2 because columns start at 2, not 0
+        if hand.total > 21:    #breaks this get action before an error out of bounds if over 21
+            return "Stand"
+        val = self.hardTableCol[hand.total][dealerAdjustedValue]
+        if val == 2:
+            if len(hand.hand) == 2:
+                return "Double"
+            else:
+                return "Hit"
+        elif val == 1:
+            return "Hit"
+        else:
+            return "Stand"
+
+    def getSoftAction(self, hand, dealer):
+        dealerAdjustedValue = dealer.total - 2  # need to offset dealer totals by 2 because columns start at 2, not 0
+        if hand.total > 21:    #breaks this get action before an error out of bounds if over 21
+            return "Stand"
+        val = self.softTableCol[hand.total][dealerAdjustedValue]
+        if val == 2:
+            if len(hand.hand) == 2:
+                return "Double"
+            else:
+                return "Hit"
+        elif val == 1:
+            return "Hit"
+        else:
+            return "Stand"
+
 def getHitorStand(myHand, dealer):
     """Determines, based on a table of what the dealer shows and the player has, whether to hit or stand
     Returns hit or stand string
     Table has 1 for hit and 0 for stand, dealer showing at top row, our total on side"""
 
-    dealerAdjustedValue = dealer.total - 3 #need to offset dealer totals by 3 because columns start at 2, not 0
+    dealerAdjustedValue = dealer.total - 2 #need to offset dealer totals by 3 because columns start at 2, not 0
 
-    #determine whether to use hard or soft hand table
-    if myHand.isSoft:
-    ##NEEDTODO: need to make a way to create the two action tables only once then reference correct chart
-    ##          based on whether the hand is soft or hard
     #dealer:  2  3  4  5  6  7  8  9 10 11
     table = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  #0   notused
              [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  #1   notused
@@ -267,8 +352,8 @@ def getHitorStand(myHand, dealer):
     for x in range(22):
         col.append(table[x])
     #print(col[17][0])
-    #if myHand.total > 21:
-    #    return "Stand"
+    if myHand.total > 21:
+        return "Stand"
     val = col[myHand.total][dealerAdjustedValue]
     if val == 0:
         return "Stand"
@@ -343,6 +428,95 @@ def playBlackJackLoop(numDecks, reshuf):
             deck.reshuf()
 
 
+def simulation2(gamesToSim, numDecks, reshuf):
+    """Simulate x number of games with y number of decks
+    counts # of wins if 'player' stays at 2 cards, or hits once"""
+
+    head_row = ["Hand Starting Value", 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, "TOTAL"]
+    secondHand_winValues = ["Second Hand Wins", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    secondHand_wins = 0
+    secondHand_lossValues = ["Second Hand Losses", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    secondHand_losses = 0
+    secondHand_tieValues = ["Second Hand Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    secondHand_ties = 0
+    deck = Deck(numDecks, reshuf)
+    moneySecondHand = 0  # starting money for second hand (that hits/stands according to table)
+
+    loops = 0
+    while loops < gamesToSim:
+        betAmount = getBetAmount(deck)
+        myHand2 = Hand(betAmount, False)
+        dealer = Hand(betAmount, True)
+
+        myHand2.discardHand()  # ensures hand values are empty / reset
+        dealer.discardHand()  # ensures dealer hand values are empty / reset
+
+        myHand2.newHand(deck, 2)
+        dealer.newHand(deck, 1)
+        handStartingValue = myHand2.getTotal()
+
+        while getHitorStand(myHand2, dealer) == "Hit" and myHand2.getTotal() < 21:
+            myHand2.draw1(deck)
+
+        while dealer.getTotal() <= 16:
+            dealer.draw1(deck)
+
+        print(dealer)
+        print(myHand2)
+        # check if player's hand won/lost/tied
+        if (myHand2.isBust()):  # no matter what if player busts, it is a loss
+            secondHand_lossValues[handStartingValue] += 1
+            secondHand_losses += 1
+            moneySecondHand = moneySecondHand - myHand2.betAmount
+            print("Loss bust")
+        elif myHand2.getTotal() < dealer.getTotal() and dealer.isNotBust():
+            secondHand_lossValues[handStartingValue] += 1
+            secondHand_losses += 1
+            moneySecondHand = moneySecondHand - myHand2.betAmount
+            print("Loss")
+        elif (myHand2.isBJ()):
+            secondHand_winValues[handStartingValue] += 1
+            secondHand_wins += 1
+            moneySecondHand = moneySecondHand + getBlackJackAmount(myHand2.betAmount)
+            print("Win bj")
+        elif (myHand2.getTotal() > dealer.getTotal()) or dealer.isBust():
+            secondHand_winValues[handStartingValue] += 1
+            secondHand_wins += 1
+            moneySecondHand = moneySecondHand + myHand2.betAmount
+            print("Win")
+        elif myHand2.getTotal() == dealer.getTotal():
+            secondHand_tieValues[handStartingValue] += 1
+            secondHand_ties += 1
+            print("Tie")
+        else:
+            print("Error")
+        print("---------------------------------")
+
+        if deck.needsReshuf:
+            deck.reshuf()
+        loops += 1
+
+    # remove all 0-3 results from the lists
+    del secondHand_winValues[1:4]
+    del secondHand_lossValues[1:4]
+    del secondHand_tieValues[1:4]
+
+    # add the total for each list to the final cell
+    secondHand_winValues.append(secondHand_wins)
+    secondHand_lossValues.append(secondHand_losses)
+    secondHand_tieValues.append(secondHand_ties)
+
+    # create betting info row
+    betRow = ["Final money for table bets:", moneySecondHand]
+
+    with open("results.csv", "w", newline="") as file:
+        writer = csv.writer(file)
+
+        writer.writerows([head_row])
+        writer.writerows([secondHand_winValues])
+        writer.writerows([secondHand_lossValues])
+        writer.writerows([secondHand_tieValues])
+        writer.writerows([betRow])
 def simulation(gamesToSim, numDecks, reshuf):
     """Simulate x number of games with y number of decks
     and bets the same hand 3 different ways to test the best way to make money"""
@@ -355,18 +529,23 @@ def simulation(gamesToSim, numDecks, reshuf):
     hand_tieValues = ["Ties", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     hand_ties = 0
     deck = Deck(numDecks, reshuf)
+    at = ActionTable()
     moneyFlatBet = 0  # starting money for flat min bet
     flatBetAmount = 5  # how much flat better bets
     moneyRandBet = 0  # starting money for random bet
     minRandBetRange = 5  # min amount for random bet
     maxRandBetRange = 20  # max amount for random bet
     moneyCardCountBet = 0  # starting money for card counting bet method
+    bigBetCount = 0        # num of times card count has been favorable enough to bet big
 
     loops = 0
     while loops < gamesToSim:
-        betAmount = getBetAmount(deck)
-        myHand = Hand(betAmount, False)
-        dealer = Hand(betAmount, True)
+
+        currentFlatBet = flatBetAmount  # resets flat bet amount for current hand
+        currentRandBet = random.randint(minRandBetRange, maxRandBetRange)
+        currentCardCountBet = getBetAmount(deck)
+        myHand = Hand(currentCardCountBet, False)
+        dealer = Hand(0, True)
         myHand.discardHand()  # ensures hand values are empty / reset
         dealer.discardHand()  # ensures dealer hand values are empty / reset
 
@@ -374,8 +553,43 @@ def simulation(gamesToSim, numDecks, reshuf):
         dealer.newHand(deck, 1)
         handStartingValue = myHand.getTotal()
 
-        while getHitorStand(myHand, dealer) == "Hit" and myHand.getTotal() < 21:
-            myHand.draw1(deck)
+
+        #get hit/stand check and draw loop performed 20 times. unsure how else to reliably
+        #get actions for hard/soft hands in a while loop. 16 possible scenarios from 4 conditional booleans
+        #truth table was created and checked against
+        for x in range(20):
+            myHandTotal = myHand.getTotal()
+            isSoft = myHand.isSoft
+            hardAction = at.getHardAction(myHand, dealer)
+            softAction = at.getSoftAction(myHand, dealer)
+
+            #first check if see if on first two cards, and if so, double & end player's turn (this loop)
+            #if len(myHand.hand) == 2:
+            #    if hardAction == "Double" or softAction == "Double":
+            #        myHand.draw1(deck)
+            #        currentFlatBet = currentFlatBet * 2
+            #        currentRandBet = currentRandBet * 2
+            #        currentCardCountBet = currentCardCountBet * 2
+            #        break
+
+            if hardAction == "Double":
+                hardAction = "Hit"
+            if softAction == "Double":
+                softAction = "Hit"
+
+            match (myHandTotal < 21, isSoft, hardAction, softAction):
+                case [True, True, "Stand", "Hit"] | [True, True, "Hit", "Hit"]:   #if hand is soft and soft table says hit
+                    myHand.draw1(deck)
+                    continue
+                case [True, False, "Hit", "Hit"] | [True, False, "Hit", "Stand"]:  #if hand is hard and hard table says hit
+                    myHand.draw1(deck)
+                    continue
+                case [False, True, "Stand", "Hit"] | [False, True, "Hit", "Hit"] | [False, False, "Hit", "Hit"] | [False, False, "Hit", "Stand"] | [False, True, "Stand", "Stand"] | [False, False, "Stand", "Stand"] | [False, True, "Hit", "Stand"] | [False, False, "Stand", "Hit"]:
+                    break #bust
+                case True, True, ["Stand", "Stand"] | [True, True, "Hit", "Stand"]: #if less than 21 and soft stand
+                    break
+                case [True, False, "Stand", "Stand"] | [True, False, "Stand", "Hit"]: #iff less than 21 and hard stand
+                    break
 
         while dealer.getTotal() <= 16 and myHand.isNotBust():
             dealer.draw1(deck)
@@ -386,25 +600,25 @@ def simulation(gamesToSim, numDecks, reshuf):
             hand_wins += 1
 
             # get payouts for blackjack and add amounts to existing totals
-            moneyCardCountBet = moneyCardCountBet + getBlackJackAmount(myHand.betAmount)
-            moneyFlatBet = moneyFlatBet + getBlackJackAmount(flatBetAmount)
-            moneyRandBet = moneyRandBet + getBlackJackAmount(random.randint(minRandBetRange, maxRandBetRange))
+            moneyCardCountBet = moneyCardCountBet + getBlackJackAmount(currentCardCountBet)
+            moneyFlatBet = moneyFlatBet + getBlackJackAmount(currentFlatBet)
+            moneyRandBet = moneyRandBet + getBlackJackAmount(currentRandBet)
         elif (myHand.getTotal() < dealer.getTotal() and dealer.isNotBust()) or myHand.isBust():
             hand_lossValues[handStartingValue] += 1
             hand_losses += 1
 
             # money adjustments for player being less than dealer (if dealer is not bust) or if player busted
-            moneyCardCountBet = moneyCardCountBet - getBetAmount(deck)
-            moneyFlatBet = moneyFlatBet - flatBetAmount
-            moneyRandBet = moneyRandBet - random.randint(minRandBetRange, maxRandBetRange)
+            moneyCardCountBet = moneyCardCountBet - currentCardCountBet
+            moneyFlatBet = moneyFlatBet - currentFlatBet
+            moneyRandBet = moneyRandBet - currentRandBet
         elif (dealer.isBust()) or (myHand.getTotal() > dealer.getTotal()):
             hand_winValues[handStartingValue] += 1
             hand_wins += 1
 
             # money adjustments for player being less than dealer (if dealer is not bust) or if player busted
-            moneyCardCountBet = moneyCardCountBet + getBetAmount(deck)
-            moneyFlatBet = moneyFlatBet + flatBetAmount
-            moneyRandBet = moneyRandBet + random.randint(minRandBetRange, maxRandBetRange)
+            moneyCardCountBet = moneyCardCountBet + currentCardCountBet
+            moneyFlatBet = moneyFlatBet + currentFlatBet
+            moneyRandBet = moneyRandBet + currentRandBet
         elif myHand.getTotal() == dealer.getTotal():
             hand_tieValues[handStartingValue] += 1
             hand_ties += 1
@@ -413,6 +627,8 @@ def simulation(gamesToSim, numDecks, reshuf):
 
         if deck.needsReshuf:
             deck.reshuf()
+        if currentCardCountBet > 5:
+            bigBetCount += 1
         loops += 1
 
     # remove all 0-3 results from the lists
@@ -429,6 +645,7 @@ def simulation(gamesToSim, numDecks, reshuf):
     betRow1 = ["$ for flat bet:", moneyFlatBet]
     betRow2 = ["$ for random bet:", moneyRandBet]
     betRow3 = ["$ for card count bet:", moneyCardCountBet]
+    betRow4 = ["# of times big bet game played:", bigBetCount]
 
     with open("results.csv", "w", newline="") as file:
         writer = csv.writer(file)
@@ -440,6 +657,7 @@ def simulation(gamesToSim, numDecks, reshuf):
         writer.writerows([betRow1])
         writer.writerows([betRow2])
         writer.writerows([betRow3])
+        writer.writerows([betRow4])
 
 def playBlackJackGUI(numDecks, reshuf):
     """Loop that gets user input to continually play blackjack. Keeps track of wins, losses and ties for the session."""
@@ -624,5 +842,5 @@ class blackjackWindow():
 
 
 #playBlackJackGUI(1,20)
-simulation(100000,5,104)
-#simulation(2,5,104)
+simulation(100000,5,52)
+#simulation2(10,5,104)
