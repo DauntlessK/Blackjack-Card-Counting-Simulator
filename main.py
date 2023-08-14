@@ -666,7 +666,6 @@ def playBlackJackGUI(numDecks, reshuf):
     myHand = Hand(0, False)
     dealer = Hand(0, True)
     deck = Deck(numDecks, reshuf)
-    playing = True
     wins = 0
     losses = 0
     ties = 0
@@ -721,7 +720,7 @@ def startNewGame(myHand, dealer, deck, games, window):
 
     #clear winner/loser label
     if games > 0:
-        window.clearWLLabel()
+        window.clearResultLabel()
 
     #draw cards
     myHand.draw1(deck, window)
@@ -768,9 +767,12 @@ class blackjackWindow():
         self.quitButton = Button(text= "Quit", padx=20, pady=20,
                                  command= lambda: quitWindow(self.window))
         self.quitButton.grid(row=4, column = 6)
-        self.winnerLabel = Label(text="WINNER", bg="#D0F0C0", font=(14))
-        self.loserLabel = Label(text="LOSER", bg="#FA8072", font=(14))
-        self.tieLabel = Label(text="TIE", bg="#48494B", font=(14))
+        self.resultLabel = Label(text="", bg="#FFFFFF", font=(14))
+        self.resultLabel.grid(row=4, column=0, columnspan=2)
+        self.dealerTotalLabel = Label(text="", bg="#FFFFFF", font=(14))
+        self.dealerTotalLabel.grid(row=2, column=0, columnspan=2)
+        self.playerTotalLabel = Label(text="", bg="#FFFFFF", font=(14))
+        self.playerTotalLabel.grid(row=3, column=0, columnspan=2)
 
         startNewGame(self.myHand, self.dealer, self.deck, self.games, self)
 
@@ -791,10 +793,6 @@ class blackjackWindow():
         """Triggers the end of the game, in a win or a loss state based on the string passed.
         Responsible for incrementing wins/losses, as well as changing the button states at game over."""
 
-        print("Game Over! ", result)
-        print(self.dealer)
-        print(self.myHand)
-
         #disable playing buttons, then enable new game button
         self.newGameButton.config(state=ACTIVE)
         self.hitButton.config(state=DISABLED)
@@ -805,14 +803,16 @@ class blackjackWindow():
             self.wins += 1
             winsLabel = Label(text=f'W: {self.wins}', font=(14))
             winsLabel.grid(row=0, column=0)
-            self.winnerLabel.grid(row=4, column =0, columnspan=2)
+            self.resultLabel.config(text="WINNER", bg="#D0F0C0")
         elif result == "Lose":
             self.losses += 1
             lossesLabel = Label(text=f'L: {self.losses}', font=(14))
             lossesLabel.grid(row=0, column=1)
-            self.loserLabel.grid(row=4, column=0, columnspan=2)
+            self.resultLabel.config(text="LOSER", bg="#FA8072")
         else:
-            self.tieLabel.grid(row=4, column=0, columnspan=2)
+            self.resultLabel.config(text="TIE", bg="#48494B")
+        self.dealerTotalLabel.config(text=f'{self.dealer.total}')
+        self.playerTotalLabel.config(text=f'{self.myHand.total}')
         self.games += 1
 
     def clearCards(self):
@@ -826,7 +826,6 @@ class blackjackWindow():
 
         #clear dealer hand
         for x in range(len(self.dealer.hand)):
-            print(len(self.dealer.hand))
             if x > 0:
                 cardImage = PhotoImage(file="cards/nocard.png")
                 newlabel = Label(self.window, image=cardImage)
@@ -836,7 +835,6 @@ class blackjackWindow():
         backImage = PhotoImage(file="cards/back.png")
         backLabel = Label(self.window, image=backImage)
         backLabel.grid(row=2, column=4)
-        print("Added second card")
 
     def activatePlayButtons(self):
         """Switches button states to allow playing"""
@@ -844,10 +842,11 @@ class blackjackWindow():
         self.standButton.config(state=ACTIVE)
         self.newGameButton.config(state=DISABLED)
 
-    def clearWLLabel(self):
-        self.winnerLabel.config(text="", bg="#000000")
-        self.loserLabel.config(text="", bg="#000000")
-        self.tieLabel.config(text="", bg="#000000")
+    def clearResultLabel(self):
+        """Resets results and total labels to nothing"""
+        self.resultLabel.config(text="", bg="#FFFFFF")
+        self.dealerTotalLabel.config(text="", bg="#FFFFFF")
+        self.playerTotalLabel.config(text="", bg="#FFFFFF")
 
     def ML(self):
         self.window.mainloop()
