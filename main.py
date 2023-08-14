@@ -229,6 +229,8 @@ def getBlackJackAmount(initialBet):
     return initialBet * 1.5    #set at 3 to 2
 
 class ActionTable():
+    """Creates an object that stores the hard action table and the soft action table. So tables should only
+    be created once and can be referenced by passing hands to the object's functions."""
 
     def __init__ (self):
                 # dealer:  2  3  4  5  6  7  8  9 10 11
@@ -288,6 +290,7 @@ class ActionTable():
             self.softTableCol.append(self.softTable[x])
 
     def getHardAction(self, hand, dealer):
+        """Gets the next action based on the player's hand being hard and player's total and dealer's total"""
         dealerAdjustedValue = dealer.total - 2  # need to offset dealer totals by 2 because columns start at 2, not 0
         if hand.total > 21:    #breaks this get action before an error out of bounds if over 21
             return "Stand"
@@ -303,6 +306,7 @@ class ActionTable():
             return "Stand"
 
     def getSoftAction(self, hand, dealer):
+        """Gets the next action based on the player's hand being soft and player's total and dealer's total"""
         dealerAdjustedValue = dealer.total - 2  # need to offset dealer totals by 2 because columns start at 2, not 0
         if hand.total > 21:    #breaks this get action before an error out of bounds if over 21
             return "Stand"
@@ -318,7 +322,8 @@ class ActionTable():
             return "Stand"
 
 def getHitorStand(myHand, dealer):
-    """Determines, based on a table of what the dealer shows and the player has, whether to hit or stand
+    """NOTE: DEFUNCT- use ActionTable class instead- this is used by old simulation code
+    Determines, based on a table of what the dealer shows and the player has, whether to hit or stand
     Returns hit or stand string
     Table has 1 for hit and 0 for stand, dealer showing at top row, our total on side"""
 
@@ -517,6 +522,7 @@ def simulation2(gamesToSim, numDecks, reshuf):
         writer.writerows([secondHand_lossValues])
         writer.writerows([secondHand_tieValues])
         writer.writerows([betRow])
+
 def simulation(gamesToSim, numDecks, reshuf):
     """Simulate x number of games with y number of decks
     and bets the same hand 3 different ways to test the best way to make money"""
@@ -647,6 +653,7 @@ def simulation(gamesToSim, numDecks, reshuf):
     betRow3 = ["$ for card count bet:", moneyCardCountBet]
     betRow4 = ["# of times big bet game played:", bigBetCount]
 
+    #write data to a csv file
     with open("results.csv", "w", newline="") as file:
         writer = csv.writer(file)
 
@@ -660,15 +667,12 @@ def simulation(gamesToSim, numDecks, reshuf):
         writer.writerows([betRow4])
 
 def playBlackJackGUI(numDecks, reshuf):
-    """Loop that gets user input to continually play blackjack. Keeps track of wins, losses and ties for the session."""
+    """Plays a GUI version of the blackjack game."""
     #reshuffle point should not be lower than 10
 
     myHand = Hand(0, False)
     dealer = Hand(0, True)
     deck = Deck(numDecks, reshuf)
-    wins = 0
-    losses = 0
-    ties = 0
     bjw = blackjackWindow(numDecks, reshuf, myHand, dealer, deck)
 
     bjw.ML()
@@ -749,7 +753,7 @@ class blackjackWindow():
         self.losses = 0
         self.games = 0
 
-        #add buttons to window in grid as well as wins and losses labels
+        #add buttons and labels to window in grid
         self.hitButton = Button(text="Hit", padx=20, pady=20,
                                 command=lambda: hit(self.myHand, self.deck, self))
                                 # needs to pass SELF not SELF.WINDOW for some reason
@@ -855,3 +859,9 @@ class blackjackWindow():
 playBlackJackGUI(1,20)
 #simulation(100000,5,52)
 #simulation2(10,5,104)
+
+
+#still to do- GUI
+#implement: double, split, betting (Get bet, total, etc)
+#still to do- sim
+#implement: split, double-check double logic, additional reporting stats (ending # wins and losses IE after stand)
