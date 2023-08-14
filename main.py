@@ -710,6 +710,7 @@ def startNewGame(myHand, dealer, deck, games, window):
     """Begins new game- clearing window, then removing cards from hands, then reshuffling if necessary then dealing"""
     #window must be cleared first- putting blank image over all existing card images
     window.clearCards()
+    window.addDealerSecondCard()
     myHand.discardHand()           # ensures hand values are empty / reset
     dealer.discardHand()           # ensures dealer hand values are empty / reset
 
@@ -769,6 +770,7 @@ class blackjackWindow():
         self.quitButton.grid(row=4, column = 6)
         self.winnerLabel = Label(text="WINNER", bg="#D0F0C0", font=(14))
         self.loserLabel = Label(text="LOSER", bg="#FA8072", font=(14))
+        self.tieLabel = Label(text="TIE", bg="#48494B", font=(14))
 
         startNewGame(self.myHand, self.dealer, self.deck, self.games, self)
 
@@ -809,6 +811,8 @@ class blackjackWindow():
             lossesLabel = Label(text=f'L: {self.losses}', font=(14))
             lossesLabel.grid(row=0, column=1)
             self.loserLabel.grid(row=4, column=0, columnspan=2)
+        else:
+            self.tieLabel.grid(row=4, column=0, columnspan=2)
         self.games += 1
 
     def clearCards(self):
@@ -822,10 +826,17 @@ class blackjackWindow():
 
         #clear dealer hand
         for x in range(len(self.dealer.hand)):
+            print(len(self.dealer.hand))
             if x > 0:
                 cardImage = PhotoImage(file="cards/nocard.png")
                 newlabel = Label(self.window, image=cardImage)
                 newlabel.grid(row=2, column=x+2)
+
+    def addDealerSecondCard(self):
+        backImage = PhotoImage(file="cards/back.png")
+        backLabel = Label(self.window, image=backImage)
+        backLabel.grid(row=2, column=4)
+        print("Added second card")
 
     def activatePlayButtons(self):
         """Switches button states to allow playing"""
@@ -836,11 +847,12 @@ class blackjackWindow():
     def clearWLLabel(self):
         self.winnerLabel.config(text="", bg="#000000")
         self.loserLabel.config(text="", bg="#000000")
+        self.tieLabel.config(text="", bg="#000000")
 
     def ML(self):
         self.window.mainloop()
 
 
-#playBlackJackGUI(1,20)
-simulation(100000,5,52)
+playBlackJackGUI(1,20)
+#simulation(100000,5,52)
 #simulation2(10,5,104)
