@@ -857,7 +857,7 @@ class blackjackWindow():
 
 
 playBlackJackGUI(1,20)
-#simulation(100000,5,52)
+#simulation(100000,5,104)
 #simulation2(10,5,104)
 
 
